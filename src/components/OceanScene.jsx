@@ -21,21 +21,21 @@ const stationWorldPositions = {
 };
 
 function FrameLimiter() {
-  const advance = useThree((state) => state.advance);
+  const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
     let frame;
     let lastFrame = 0;
     const loop = (time) => {
       if (!lastFrame || time - lastFrame >= MAX_FRAME_INTERVAL - 0.5) {
-        advance(time, true);
+        invalidate();
         lastFrame = time;
       }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [advance]);
+  }, [invalidate]);
 
   return null;
 }
@@ -509,7 +509,7 @@ export function OceanScene({
       className="ocean-canvas"
       tabIndex={title ? -1 : 0}
       aria-label={title ? "The Wayward Gull title diorama" : "3D combat camera"}
-      frameloop="never"
+      frameloop="demand"
       shadows={THREE.PCFShadowMap}
       dpr={[1, 1.65]}
       camera={{ position: title ? [11.5, 7, 14] : [12, 12, 16], fov: title ? 39 : 42 }}
