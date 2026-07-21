@@ -1,0 +1,2 @@
+export const MAX_FRAME_RATE = 60;
+export const MAX_FRAME_INTERVAL = 1000 / MAX_FRAME_RATE;
