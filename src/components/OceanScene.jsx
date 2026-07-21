@@ -2,6 +2,7 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { ENEMY_MECH, PLAYER_SHIP } from "../battleLayout";
 
 const stationWorldPositions = {
   helm: [-1.65, 1.02, 0.15],
@@ -159,7 +160,6 @@ function ShipModel({
   rotation,
   scale = 1,
   crew = [],
-  enemy = false,
   damage = 0,
   fire = 0,
 }) {
@@ -171,21 +171,15 @@ function ShipModel({
       if (!child.isMesh) return;
       child.castShadow = true;
       child.receiveShadow = true;
-      if (child.material) {
-        child.material = child.material.clone();
-        if (enemy && /oak|timber|ensign/i.test(child.material.name)) {
-          child.material.color.lerp(new THREE.Color("#251617"), 0.26);
-        }
-      }
+      if (child.material) child.material = child.material.clone();
     });
     return object;
-  }, [enemy, scene]);
-  const phase = enemy ? 1.7 : 0;
+  }, [scene]);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
-    group.current.position.y = position[1] + Math.sin(clock.elapsedTime * 0.8 + phase) * 0.08;
-    group.current.rotation.z = rotation[2] + Math.sin(clock.elapsedTime * 0.55 + phase) * 0.018;
+    group.current.position.y = position[1] + Math.sin(clock.elapsedTime * 0.8) * 0.08;
+    group.current.rotation.z = rotation[2] + Math.sin(clock.elapsedTime * 0.55) * 0.018;
   });
 
   return (
@@ -217,9 +211,238 @@ function ShipModel({
   );
 }
 
-function SceneContent({ variant, player, enemy, crew, fogDense }) {
+function ArmorPlate({ args, position, rotation = [0, 0, 0], color = "#3a454c", metalness = 0.72, roughness = 0.38 }) {
+  return (
+    <mesh position={position} rotation={rotation} castShadow receiveShadow>
+      <boxGeometry args={args} />
+      <meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />
+    </mesh>
+  );
+}
+
+function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw }) {
+  const group = useRef();
+  const torso = useRef();
+  const damage = 100 - (enemy?.hull || 100);
+  const mobility = enemy?.mobility ?? 100;
+  const fire = enemy?.fire || 0;
+  const limp = mobility < 45 ? 0.22 : 0.08;
+
+  useFrame(({ clock }) => {
+    if (!group.current) return;
+    const t = clock.elapsedTime;
+    group.current.position.y = position[1] + Math.sin(t * 1.1) * 0.05;
+    group.current.rotation.y = yaw + Math.sin(t * 0.35) * 0.03;
+    group.current.rotation.z = Math.sin(t * 0.7) * limp * 0.15;
+    if (torso.current) torso.current.rotation.y = Math.sin(t * 0.45) * 0.08;
+  });
+
+  const plate = damage > 55 ? "#2a2220" : "#3d4850";
+  const accent = "#8a3a2a";
+
+  return (
+    <group ref={group} position={position} rotation={[0, yaw, 0]}>
+      {/* Legs */}
+      <ArmorPlate args={[0.55, 1.35, 0.55]} position={[-0.45, 0.55, 0.15]} color={plate} />
+      <ArmorPlate args={[0.55, 1.35, 0.55]} position={[0.45, 0.55, 0.15]} color={plate} />
+      <ArmorPlate args={[0.7, 0.28, 0.95]} position={[-0.45, -0.05, 0.35]} color="#2b3238" />
+      <ArmorPlate args={[0.7, 0.28, 0.95]} position={[0.45, -0.05, 0.35]} color="#2b3238" />
+      <ArmorPlate args={[0.35, 0.55, 0.35]} position={[-0.45, 1.25, 0.05]} color="#505a62" />
+      <ArmorPlate args={[0.35, 0.55, 0.35]} position={[0.45, 1.25, 0.05]} color="#505a62" />
+
+      {/* Hip / pelvis */}
+      <ArmorPlate args={[1.35, 0.45, 0.85]} position={[0, 1.55, 0]} color="#333b42" />
+
+      <group ref={torso} position={[0, 1.85, 0]}>
+        {/* Torso */}
+        <ArmorPlate args={[1.55, 1.45, 1.05]} position={[0, 0.7, 0]} color={plate} />
+        <ArmorPlate args={[1.15, 0.55, 0.35]} position={[0, 1.15, 0.55]} color={accent} metalness={0.55} />
+        <ArmorPlate args={[0.55, 0.7, 0.55]} position={[0, 1.55, 0]} color="#1c2228" />
+        {/* Head / optics */}
+        <mesh position={[0, 1.95, 0.15]} castShadow>
+          <boxGeometry args={[0.7, 0.55, 0.65]} />
+          <meshStandardMaterial color="#1a1f24" metalness={0.8} roughness={0.28} />
+        </mesh>
+        <mesh position={[0, 1.95, 0.48]}>
+          <boxGeometry args={[0.42, 0.12, 0.08]} />
+          <meshStandardMaterial color="#ff6a2b" emissive="#ff3b00" emissiveIntensity={1.4} />
+        </mesh>
+        <pointLight position={[0, 1.95, 0.7]} color="#ff6a2b" intensity={1.2} distance={4} />
+
+        {/* Arms + gun pods */}
+        <ArmorPlate args={[0.38, 1.05, 0.38]} position={[-0.95, 0.55, 0.1]} rotation={[0.15, 0, 0.25]} color="#464f57" />
+        <ArmorPlate args={[0.38, 1.05, 0.38]} position={[0.95, 0.55, 0.1]} rotation={[0.15, 0, -0.25]} color="#464f57" />
+        <ArmorPlate args={[0.55, 0.45, 1.15]} position={[-1.15, 0.15, 0.55]} color="#2f363c" />
+        <ArmorPlate args={[0.55, 0.45, 1.15]} position={[1.15, 0.15, 0.55]} color="#2f363c" />
+        <mesh position={[-1.15, 0.15, 1.15]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.12, 0.14, 0.55, 10]} />
+          <meshStandardMaterial color="#1a1c1e" metalness={0.85} roughness={0.25} />
+        </mesh>
+        <mesh position={[1.15, 0.15, 1.15]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.12, 0.14, 0.55, 10]} />
+          <meshStandardMaterial color="#1a1c1e" metalness={0.85} roughness={0.25} />
+        </mesh>
+        <mesh position={[-1.15, -0.05, 0.85]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.4, 8]} />
+          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.2} />
+        </mesh>
+        <mesh position={[1.15, -0.05, 0.85]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.4, 8]} />
+          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.2} />
+        </mesh>
+      </group>
+
+      {/* Shoulder stacks */}
+      <ArmorPlate args={[0.7, 0.35, 0.7]} position={[-0.85, 2.55, -0.05]} color="#505862" />
+      <ArmorPlate args={[0.7, 0.35, 0.7]} position={[0.85, 2.55, -0.05]} color="#505862" />
+
+      {fire > 5 && (
+        <group position={[0.2, 2.2, 0.1]}>
+          <pointLight color="#ff6a24" intensity={Math.min(5, fire / 16)} distance={6} />
+          <mesh>
+            <sphereGeometry args={[0.28 + fire / 350, 12, 8]} />
+            <meshBasicMaterial color="#f65d2f" transparent opacity={0.7} />
+          </mesh>
+        </group>
+      )}
+      {damage > 40 && (
+        <mesh position={[0.55, 2.1, 0.4]}>
+          <sphereGeometry args={[0.14, 8, 8]} />
+          <meshBasicMaterial color="#120e0c" />
+        </mesh>
+      )}
+      {mobility < 50 && (
+        <mesh position={[-0.45, 0.9, 0.4]} rotation={[0, 0, 0.4]}>
+          <boxGeometry args={[0.12, 0.45, 0.12]} />
+          <meshStandardMaterial color="#6a2a1a" emissive="#ff3a00" emissiveIntensity={0.6} />
+        </mesh>
+      )}
+
+      {/* Wake / footing in the surf */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.48, 0.2]}>
+        <ringGeometry args={[0.9, 1.8, 40]} />
+        <meshBasicMaterial color="#9ec9c2" transparent opacity={0.16} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function shotProgress(shot, age) {
+  if (age < shot.fireDelay) return -1;
+  return Math.min(1, (age - shot.fireDelay) / shot.duration);
+}
+
+function sampleArc(origin, destination, t, arc) {
+  const x = THREE.MathUtils.lerp(origin[0], destination[0], t);
+  const z = THREE.MathUtils.lerp(origin[2], destination[2], t);
+  const baseY = THREE.MathUtils.lerp(origin[1], destination[1], t);
+  const y = baseY + Math.sin(Math.PI * t) * arc;
+  return [x, y, z];
+}
+
+function MuzzleFlash({ position, kind, strength }) {
+  const color = kind === "mech" ? "#ff7a3a" : "#ffd28a";
+  return (
+    <group position={position}>
+      <pointLight color={color} intensity={2.8 * strength} distance={4.5} decay={2} />
+      <mesh>
+        <sphereGeometry args={[0.12 + 0.08 * strength, 8, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={0.85 * strength} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[0.28 + 0.12 * strength, 8, 8]} />
+        <meshBasicMaterial color="#fff6df" transparent opacity={0.28 * strength} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function ImpactBurst({ position, kind, strength }) {
+  const color = kind === "mech" ? "#ff9a55" : "#e8c07a";
+  return (
+    <group position={position}>
+      <pointLight color={color} intensity={3.2 * strength} distance={5} />
+      <mesh>
+        <sphereGeometry args={[0.18 + 0.2 * strength, 10, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={0.75 * strength} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[0.45 + 0.25 * strength, 10, 8]} />
+        <meshBasicMaterial color="#fff" transparent opacity={0.18 * strength} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function VolleyEffects({ volleys = [] }) {
+  const flashes = [];
+  const balls = [];
+  const impacts = [];
+
+  volleys.forEach((volley) => {
+    volley.shots.forEach((shot) => {
+      const t = shotProgress(shot, volley.age);
+      if (t < 0) return;
+
+      const sinceFire = volley.age - shot.fireDelay;
+      if (sinceFire < 0.18) {
+        flashes.push({
+          id: `${shot.id}-flash`,
+          position: shot.origin,
+          kind: shot.kind,
+          strength: 1 - sinceFire / 0.18,
+        });
+      }
+
+      if (t < 1) {
+        balls.push({
+          id: shot.id,
+          position: sampleArc(shot.origin, shot.destination, t, shot.arc),
+          kind: shot.kind,
+        });
+      } else {
+        const sinceLand = volley.age - shot.fireDelay - shot.duration;
+        if (sinceLand < 0.28) {
+          impacts.push({
+            id: `${shot.id}-hit`,
+            position: shot.destination,
+            kind: shot.kind,
+            strength: 1 - sinceLand / 0.28,
+          });
+        }
+      }
+    });
+  });
+
+  return (
+    <group>
+      {flashes.map((flash) => (
+        <MuzzleFlash key={flash.id} {...flash} />
+      ))}
+      {balls.map((ball) => (
+        <mesh key={ball.id} position={ball.position} castShadow>
+          <sphereGeometry args={[ball.kind === "mech" ? 0.09 : 0.07, 10, 8]} />
+          <meshStandardMaterial
+            color={ball.kind === "mech" ? "#ffb070" : "#2a2a2a"}
+            emissive={ball.kind === "mech" ? "#ff5a18" : "#111"}
+            emissiveIntensity={ball.kind === "mech" ? 1.6 : 0.15}
+            metalness={0.85}
+            roughness={0.35}
+          />
+        </mesh>
+      ))}
+      {impacts.map((burst) => (
+        <ImpactBurst key={burst.id} {...burst} />
+      ))}
+    </group>
+  );
+}
+
+function SceneContent({ variant, player, enemy, crew, fogDense, volleys }) {
   const title = variant === "title";
-  const playerRotation = title ? [0, 0.7, 0] : [0, 0.7 + (player?.heading || 0) * 0.004, 0];
+  const playerRotation = title
+    ? [0, 0.7, 0]
+    : [0, PLAYER_SHIP.yaw + (player?.heading || 0) * 0.004, 0];
 
   return (
     <>
@@ -237,30 +460,28 @@ function SceneContent({ variant, player, enemy, crew, fogDense }) {
       <OceanSurface calm={title} />
       <ShipModel
         url="/assets/models/ships/wayward-gull-detailed.glb"
-        position={title ? [0, -0.05, 0] : [3.2, 0, 3.2]}
+        position={title ? [0, -0.05, 0] : PLAYER_SHIP.position}
         rotation={playerRotation}
-        scale={title ? 0.86 : 0.58}
+        scale={title ? 0.86 : PLAYER_SHIP.scale}
         crew={title ? [] : crew}
         fire={player?.fire || 0}
         damage={100 - (player?.hull || 100)}
       />
-      {!title && (
-        <ShipModel
-          enemy
-          url="/assets/models/ships/wayward-gull-detailed.glb"
-          position={[-8.2, -0.08, -7.2]}
-          rotation={[0, 3.84, 0]}
-          scale={0.48}
-          fire={enemy?.fire || 0}
-          damage={100 - (enemy?.hull || 100)}
-        />
-      )}
+      {!title && <MechModel enemy={enemy} />}
+      {!title && <VolleyEffects volleys={volleys} />}
       <CameraControls title={title} />
     </>
   );
 }
 
-export function OceanScene({ variant = "combat", player, enemy, crew = [], fogDense = false }) {
+export function OceanScene({
+  variant = "combat",
+  player,
+  enemy,
+  crew = [],
+  fogDense = false,
+  volleys = [],
+}) {
   const title = variant === "title";
   return (
     <Canvas
@@ -273,7 +494,14 @@ export function OceanScene({ variant = "combat", player, enemy, crew = [], fogDe
       gl={{ antialias: true, powerPreference: "high-performance" }}
     >
       <Suspense fallback={null}>
-        <SceneContent variant={variant} player={player} enemy={enemy} crew={crew} fogDense={fogDense} />
+        <SceneContent
+          variant={variant}
+          player={player}
+          enemy={enemy}
+          crew={crew}
+          fogDense={fogDense}
+          volleys={volleys}
+        />
       </Suspense>
     </Canvas>
   );
