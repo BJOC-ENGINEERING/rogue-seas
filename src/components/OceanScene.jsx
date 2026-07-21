@@ -217,6 +217,143 @@ function ShipModel({
   );
 }
 
+function makeSwarmRoster(count, kind) {
+  return Array.from({ length: count }, (_, index) => {
+    const orbit = 1.1 + (index % 9) * 0.42 + (kind === "wasp" ? 0.35 : 0);
+    return {
+      kind,
+      radius: orbit,
+      elev: ((index * 0.37) % 2.4) - 1.1,
+      speed: (kind === "wasp" ? 1.15 : 0.85) + (index % 6) * 0.18,
+      phase: index * 0.53 + (kind === "wasp" ? 1.2 : 0),
+      bob: 0.55 + (index % 5) * 0.12,
+      spin: 0.7 + (index % 4) * 0.35,
+      size: kind === "wasp" ? 0.11 + (index % 4) * 0.018 : 0.09 + (index % 5) * 0.014,
+    };
+  });
+}
+
+function EvilSwarm({ enemy, position = [-8.2, 1.35, -7.2] }) {
+  const group = useRef();
+  const beeBodies = useRef();
+  const waspBodies = useRef();
+  const wings = useRef();
+  const queen = useRef();
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const bees = useMemo(() => makeSwarmRoster(96, "bee"), []);
+  const wasps = useMemo(() => makeSwarmRoster(58, "wasp"), []);
+  const insects = useMemo(() => [...bees, ...wasps], [bees, wasps]);
+
+  useFrame(({ clock }) => {
+    if (!group.current) return;
+    const t = clock.elapsedTime;
+    const integrity = Math.max(0.12, (enemy?.hull ?? 100) / 100);
+    const drones = Math.max(0.18, (enemy?.crew ?? 100) / 100);
+    const rage = Math.min(1, (enemy?.fire ?? 0) / 70);
+    const aliveCount = Math.max(18, Math.floor(insects.length * integrity * (0.55 + drones * 0.45)));
+
+    group.current.position.y = position[1] + Math.sin(t * 0.9) * 0.18;
+    group.current.rotation.y = t * 0.08;
+
+    let wingIndex = 0;
+    insects.forEach((bug, index) => {
+      const alive = index < aliveCount;
+      const angle = t * bug.speed + bug.phase;
+      const swirl = 1 + Math.sin(t * bug.bob + bug.phase) * 0.12 + rage * 0.18;
+      const x = Math.cos(angle) * bug.radius * swirl * integrity;
+      const z = Math.sin(angle * 0.92) * bug.radius * 0.78 * swirl * integrity;
+      const y = bug.elev * integrity + Math.sin(t * bug.bob * 1.4 + bug.phase) * 0.35;
+      const scale = alive ? bug.size * (0.85 + integrity * 0.35) : 0.0001;
+
+      dummy.position.set(x, y, z);
+      if (bug.kind === "wasp") {
+        dummy.scale.set(scale * 0.75, scale * 0.75, scale * 1.35);
+      } else {
+        dummy.scale.set(scale * 0.85, scale * 0.7, scale * 1.45);
+      }
+      dummy.rotation.set(
+        Math.sin(t * bug.spin + bug.phase) * 0.45,
+        angle + Math.PI / 2,
+        Math.cos(t * bug.spin * 1.2) * 0.35,
+      );
+      dummy.updateMatrix();
+
+      const bodyMesh = bug.kind === "wasp" ? waspBodies.current : beeBodies.current;
+      const localIndex = bug.kind === "wasp" ? index - bees.length : index;
+      if (bodyMesh) bodyMesh.setMatrixAt(localIndex, dummy.matrix);
+
+      if (wings.current) {
+        dummy.scale.set(scale * 2.4, scale * 0.18, scale * 1.1);
+        dummy.rotation.z = Math.sin(t * 28 + bug.phase) * 0.55;
+        dummy.updateMatrix();
+        wings.current.setMatrixAt(wingIndex, dummy.matrix);
+        wingIndex += 1;
+      }
+    });
+
+    if (beeBodies.current) beeBodies.current.instanceMatrix.needsUpdate = true;
+    if (waspBodies.current) waspBodies.current.instanceMatrix.needsUpdate = true;
+    if (wings.current) wings.current.instanceMatrix.needsUpdate = true;
+
+    if (queen.current) {
+      const pulse = 1 + Math.sin(t * 3.2) * 0.08 + rage * 0.12;
+      queen.current.scale.setScalar(0.55 * integrity * pulse);
+      queen.current.rotation.y = t * 1.4;
+      queen.current.rotation.z = Math.sin(t * 2.1) * 0.2;
+    }
+  });
+
+  return (
+    <group ref={group} position={position}>
+      <pointLight color="#ffb347" intensity={2.4 + Math.min(3, (enemy?.fire || 0) / 20)} distance={10} />
+      <pointLight color="#ff3b1f" intensity={0.8 + Math.min(2.5, (enemy?.fire || 0) / 28)} distance={7} position={[0.4, 0.2, -0.3]} />
+
+      <group ref={queen}>
+        <mesh castShadow>
+          <capsuleGeometry args={[0.22, 0.55, 6, 10]} />
+          <meshStandardMaterial color="#1a1208" roughness={0.45} metalness={0.15} emissive="#4a1808" emissiveIntensity={0.35} />
+        </mesh>
+        <mesh position={[0.08, 0.08, 0]} castShadow>
+          <capsuleGeometry args={[0.16, 0.28, 4, 8]} />
+          <meshStandardMaterial color="#d4a017" roughness={0.4} emissive="#a86400" emissiveIntensity={0.25} />
+        </mesh>
+        <mesh position={[-0.12, 0.42, 0]} rotation={[0, 0, 0.4]}>
+          <coneGeometry args={[0.05, 0.28, 6]} />
+          <meshStandardMaterial color="#2b1208" />
+        </mesh>
+        <mesh position={[0.05, 0.2, 0.18]} rotation={[0.3, 0.4, 0.8]}>
+          <planeGeometry args={[0.55, 0.28]} />
+          <meshStandardMaterial color="#f4e8c1" transparent opacity={0.45} side={THREE.DoubleSide} depthWrite={false} />
+        </mesh>
+        <mesh position={[0.05, 0.2, -0.18]} rotation={[-0.3, -0.4, -0.8]}>
+          <planeGeometry args={[0.55, 0.28]} />
+          <meshStandardMaterial color="#f4e8c1" transparent opacity={0.45} side={THREE.DoubleSide} depthWrite={false} />
+        </mesh>
+      </group>
+
+      <instancedMesh ref={beeBodies} args={[undefined, undefined, bees.length]} castShadow>
+        <sphereGeometry args={[1, 8, 6]} />
+        <meshStandardMaterial color="#f0c040" roughness={0.48} emissive="#6b4a00" emissiveIntensity={0.18} />
+      </instancedMesh>
+      <instancedMesh ref={waspBodies} args={[undefined, undefined, wasps.length]} castShadow>
+        <capsuleGeometry args={[0.55, 1.35, 4, 8]} />
+        <meshStandardMaterial color="#e8a018" roughness={0.42} emissive="#6b2a00" emissiveIntensity={0.2} />
+      </instancedMesh>
+      <instancedMesh ref={wings} args={[undefined, undefined, insects.length]}>
+        <planeGeometry args={[1, 1]} />
+        <meshStandardMaterial color="#fff6d8" transparent opacity={0.4} side={THREE.DoubleSide} depthWrite={false} />
+      </instancedMesh>
+
+      {(enemy?.fire || 0) > 8 && (
+        <mesh>
+          <sphereGeometry args={[0.35 + (enemy.fire || 0) / 180, 12, 8]} />
+          <meshBasicMaterial color="#ff5a1f" transparent opacity={0.35} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 function SceneContent({ variant, player, enemy, crew, fogDense }) {
   const title = variant === "title";
   const playerRotation = title ? [0, 0.7, 0] : [0, 0.7 + (player?.heading || 0) * 0.004, 0];
@@ -244,17 +381,7 @@ function SceneContent({ variant, player, enemy, crew, fogDense }) {
         fire={player?.fire || 0}
         damage={100 - (player?.hull || 100)}
       />
-      {!title && (
-        <ShipModel
-          enemy
-          url="/assets/models/ships/wayward-gull-detailed.glb"
-          position={[-8.2, -0.08, -7.2]}
-          rotation={[0, 3.84, 0]}
-          scale={0.48}
-          fire={enemy?.fire || 0}
-          damage={100 - (enemy?.hull || 100)}
-        />
-      )}
+      {!title && <EvilSwarm enemy={enemy} />}
       <CameraControls title={title} />
     </>
   );

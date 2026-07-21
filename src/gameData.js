@@ -192,7 +192,7 @@ export const chartNodes = [
     type: "combat",
     x: 48,
     y: 31,
-    description: "A frigate has been hunting merchant traffic through the fog.",
+    description: "A giant swarm of evil bees and wasps has been hunting anything that sails through the fog.",
     links: ["freeport"],
   },
   {
@@ -219,7 +219,7 @@ export const chartNodes = [
     type: "elite",
     x: 88,
     y: 24,
-    description: "The privateer flagship waits beyond the shoals.",
+    description: "The queen swarm waits beyond the shoals, a living cloud of stingers.",
     links: [],
   },
 ];
@@ -231,7 +231,7 @@ export const ammoData = {
     sails: 5,
     crew: 2,
     reload: 7.2,
-    detail: "Crush hull sections and open leaks.",
+    detail: "Punch through the swarm mass and scatter the hive core.",
   },
   chain: {
     label: "Chain shot",
@@ -239,7 +239,7 @@ export const ammoData = {
     sails: 20,
     crew: 1,
     reload: 6.2,
-    detail: "Tear rigging and cripple escape.",
+    detail: "Shear wings and cripple the swarm's flight.",
   },
   grape: {
     label: "Grapeshot",
@@ -247,7 +247,7 @@ export const ammoData = {
     sails: 2,
     crew: 15,
     reload: 5.4,
-    detail: "Rake exposed decks and break morale.",
+    detail: "Clear drones and break the swarm's nerve.",
   },
   fire: {
     label: "Incendiary",
@@ -255,7 +255,7 @@ export const ammoData = {
     sails: 8,
     crew: 4,
     reload: 8.5,
-    detail: "Start fires that demand enemy crew.",
+    detail: "Set the hive ablaze and force the swarm to burn.",
   },
 };
 
@@ -302,7 +302,7 @@ export function makePlayerShip() {
 
 export function makeEnemyShip() {
   return {
-    name: "Unknown Frigate",
+    name: "Hive Swarm",
     hull: 100,
     maxHull: 100,
     sails: 100,

@@ -15,7 +15,7 @@ export function TitleScreen() {
           Seas
         </h1>
         <div className="title-rule"><Anchor weight="fill" /></div>
-        <p className="title-tagline">Chart the unknown. Command your crew. Survive the broadside.</p>
+        <p className="title-tagline">Chart the unknown. Command your crew. Survive the swarm.</p>
         <button className="primary-cta" onClick={beginVoyage}>
           <Play weight="fill" />
           <span>

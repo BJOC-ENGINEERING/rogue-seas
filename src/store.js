@@ -13,7 +13,7 @@ const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value))
 const nowId = () => `${Date.now()}-${Math.round(Math.random() * 10000)}`;
 
 const initialLog = [
-  { id: "welcome", tone: "neutral", text: "Enemy sighted through the fog. Beat to quarters." },
+  { id: "welcome", tone: "neutral", text: "A living cloud of bees and wasps darkens the fog. Beat to quarters." },
 ];
 
 function manningCount(crew, stationId) {
@@ -189,7 +189,7 @@ export const useGameStore = create(persist((set, get) => ({
       set((current) => ({
         player: { ...current.player, reload: ammo.reload / Math.max(1, gunCrew * 0.68) },
         shotsFired: current.shotsFired + 1,
-        log: addLog(current.log, `${ammo.label} whistles across the enemy bow.`, "warning"),
+        log: addLog(current.log, `${ammo.label} whistles through empty air—the swarm parts and reforms.`, "warning"),
       }));
       return;
     }
@@ -214,6 +214,13 @@ export const useGameStore = create(persist((set, get) => ({
       identified: state.enemy.identified || manningCount(state.crew, "lookout") > 0,
     };
 
+    const targetLabel = {
+      hull: "swarm mass",
+      sails: "wings",
+      weapons: "stingers",
+      crew: "drones",
+    }[state.targetSystem] || state.targetSystem;
+
     const won = nextEnemy.hull <= 0 || nextEnemy.morale <= 0 || nextEnemy.crew <= 0;
     set((current) => ({
       enemy: nextEnemy,
@@ -223,8 +230,8 @@ export const useGameStore = create(persist((set, get) => ({
       log: addLog(
         current.log,
         won
-          ? "The enemy colours come down. The frigate is yours."
-          : `${ammo.label} strikes ${state.targetSystem}: ${Math.round(hullDamage)} hull damage.`,
+          ? "The hive breaks apart. The swarm is yours to scatter."
+          : `${ammo.label} tears into the ${targetLabel}: ${Math.round(hullDamage)} mass damage.`,
         won ? "success" : "danger",
       ),
     }));
@@ -237,7 +244,7 @@ export const useGameStore = create(persist((set, get) => ({
     if (Math.random() < chance) {
       set((current) => ({ battleState: "escaped", log: addLog(current.log, "The Wayward Gull disappears into the fog.", "success") }));
     } else {
-      set((current) => ({ log: addLog(current.log, "The frigate matches our turn. We cannot break away yet.", "warning") }));
+      set((current) => ({ log: addLog(current.log, "The swarm matches our turn. We cannot break away yet.", "warning") }));
     }
   },
 
@@ -334,13 +341,13 @@ export const useGameStore = create(persist((set, get) => ({
               ? { ...person, health: clamp(person.health - 18 - Math.random() * 22), status: "Wounded at station" }
               : person,
           );
-          nextLog = addLog(nextLog, `${injured.name} is wounded by flying splinters!`, "danger");
+          nextLog = addLog(nextLog, `${injured.name} is stung and wounded by the swarm!`, "danger");
           shouldAutoPause = true;
         } else {
-          nextLog = addLog(nextLog, `Enemy broadside lands—${Math.round(impact)} hull damage.`, "danger");
+          nextLog = addLog(nextLog, `The swarm dives—${Math.round(impact)} hull damage.`, "danger");
         }
       } else {
-        nextLog = addLog(nextLog, "Enemy broadside falls astern as the Gull turns.", "success");
+        nextLog = addLog(nextLog, "The swarm's dive falls astern as the Gull turns.", "success");
       }
     }
 
