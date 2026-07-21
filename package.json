@@ -1,7 +1,7 @@
 {
   "name": "rogue-seas",
   "version": "0.1.0",
-  "description": "An age-of-sail browser combat roguelike with FTL-style crew management.",
+  "description": "An age-of-sail browser combat roguelike: visual broadsides against war-mechs with FTL-style crew management.",
   "private": true,
   "license": "MIT",
   "repository": {

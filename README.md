@@ -1,13 +1,13 @@
 # Rogue Seas
 
-**A browser-based age-of-sail combat roguelike with an FTL-style crew and damage-control layer.**
+**A browser-based age-of-sail combat roguelike: Empire-style visual broadsides against war-mechs, with an FTL-style crew and damage-control layer.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-c59035.svg)](./LICENSE)
 [![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL-111111.svg)](https://threejs.org/)
 [![CI](https://github.com/BJOC-ENGINEERING/rogue-seas/actions/workflows/ci.yml/badge.svg)](https://github.com/BJOC-ENGINEERING/rogue-seas/actions/workflows/ci.yml)
 
-Command the *Wayward Gull* through a branching voyage. Assign a named crew to the helm, lookout, sails, guns, pumps, repairs, and surgery. Slow time when a broadside tears through the hull, then decide whether to fight, repair, or run before fire and flooding overwhelm the ship.
+Command the *Wayward Gull* through a branching voyage. Assign a named crew to the helm, lookout, sails, guns, pumps, repairs, and surgery. Line up Total War–style cannon ripples against towering war-mechs, slow time when a shell tears through the hull, then decide whether to fight, repair, or run before fire and flooding overwhelm the ship.
 
 Rogue Seas is a single-player, offline-first prototype. There are no accounts, analytics, multiplayer services, or backend dependencies.
 
@@ -22,8 +22,9 @@ The game runs best in a modern desktop browser with WebGL enabled.
 - A title, voyage chart, encounter, and full combat loop
 - Six named crew members with roles, health, movement, and station bonuses
 - Pausable real-time combat at 1x, 2x, and 3x speed
-- Port and starboard broadsides with round, chain, and grape shot
-- Targetable enemy systems and deterministic opening-fire behavior
+- Port and starboard broadsides with staggered visual cannonballs, muzzle flash, and impact bursts
+- War-mech opponents with armor, motive joints, weapon pods, and crew targeting
+- Round, chain, grape, and incendiary shot with delayed damage on impact
 - Fires, flooding, hull damage, torn sails, wounds, and critical-event auto-pause
 - Repair, pump, firefighting, surgery, retreat, victory, and defeat actions
 - Branching voyage nodes, port repair, supplies, and persistent local progress
@@ -81,11 +82,12 @@ Zustand simulation store
         ▼
 React Three Fiber / Three.js
 ├── Blender-generated glTF ships
+├── Procedural war-mechs and visual volleys
 ├── Ocean, fog, lighting, and wake
 └── Crew, damage, and camera presentation
 ```
 
-Simulation state is kept separate from 3D presentation so combat rules can grow without replacing the renderer or interface.
+Simulation state is kept separate from 3D presentation so combat rules can grow without replacing the renderer or interface. Volleys live in the store; the scene only samples flight arcs and muzzle timing.
 
 ## Rebuild the detailed ship
 

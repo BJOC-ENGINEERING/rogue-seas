@@ -126,8 +126,8 @@ export function ChartScreen() {
             <button className="modal-close" onClick={closeEncounter} aria-label="Close encounter"><X /></button>
             <span className="encounter-seal"><Skull weight="fill" /></span>
             <p className="eyebrow">Sail to the sound of guns</p>
-            <h3 id="encounter-title">You encounter an enemy ship</h3>
-            <p>A black-flag frigate emerges from the fog and turns to bring its guns to bear.</p>
+            <h3 id="encounter-title">You encounter a war-mech</h3>
+            <p>Iron limbs rise from the fog and the machine turns its gun pods toward your broadside.</p>
             <button className="primary-cta compact" onClick={startEncounter}>
               <FlagBanner weight="fill" />
               <span><strong>Fight</strong><small>Beat to quarters</small></span>

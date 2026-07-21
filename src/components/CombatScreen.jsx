@@ -17,7 +17,7 @@ import {
   Sword,
   Wind,
 } from "@phosphor-icons/react";
-import { ammoData } from "../gameData";
+import { ammoData, targetSystems } from "../gameData";
 import { useGameStore } from "../store";
 import { CrewPanel } from "./CrewPanel";
 import { OceanScene } from "./OceanScene";
@@ -38,8 +38,8 @@ function VesselPlate({ enemy = false }) {
     <section className={`vessel-plate ${enemy ? "enemy" : "player"}`}>
       {!enemy && <span className="vessel-monogram">RS</span>}
       <div>
-        <small>{enemy ? "Hostile vessel" : "Your vessel"}</small>
-        <strong>{enemy && !foe.identified ? "Unknown Frigate" : ship.name}</strong>
+        <small>{enemy ? "Hostile mech" : "Your vessel"}</small>
+        <strong>{enemy && !foe.identified ? "Unknown War-Mech" : ship.name}</strong>
         <Meter value={ship.hull} tone={ship.hull < 35 ? "red" : "gold"} label="Hull" />
       </div>
       {enemy && <span className="vessel-monogram"><Sword weight="fill" /></span>}
@@ -109,10 +109,9 @@ function GunneryControls() {
       <label>
         <span>Target</span>
         <select value={targetSystem} onChange={(event) => setTargetSystem(event.target.value)}>
-          <option value="hull">Hull sections</option>
-          <option value="sails">Sails &amp; rigging</option>
-          <option value="weapons">Gun batteries</option>
-          <option value="crew">Exposed crew</option>
+          {targetSystems.map((system) => (
+            <option key={system.id} value={system.id}>{system.label}</option>
+          ))}
         </select>
       </label>
       <button className="fire-button" onClick={fireBroadside} disabled={player.reload > 0}>
@@ -160,7 +159,8 @@ function ShipReadouts() {
       <section><span>Hull</span><strong>{Math.round(player.hull)}</strong><Meter value={player.hull} tone={player.hull < 35 ? "red" : "gold"} label="Player hull" /></section>
       <section><span>Flood</span><strong>{Math.round(player.flood)}</strong><Meter value={player.flood} tone="blue" label="Flooding" /></section>
       <section><span>Fire</span><strong>{Math.round(player.fire)}</strong><Meter value={player.fire} tone="red" label="Fire" /></section>
-      <section><span>Enemy</span><strong>{Math.round(enemy.hull)}</strong><Meter value={enemy.hull} tone="red" label="Enemy hull" /></section>
+      <section><span>Armor</span><strong>{Math.round(enemy.hull)}</strong><Meter value={enemy.hull} tone="red" label="Mech armor" /></section>
+      <section><span>Joints</span><strong>{Math.round(enemy.mobility)}</strong><Meter value={enemy.mobility} tone="gold" label="Mech mobility" /></section>
     </div>
   );
 }
@@ -185,9 +185,9 @@ function BattleOutcome() {
     <div className="modal-backdrop battle-outcome">
       <section className="encounter-card">
         <span className="encounter-seal">{victory ? <Sword weight="fill" /> : escaped ? <Wind weight="fill" /> : <Drop weight="fill" />}</span>
-        <p className="eyebrow">{victory ? "Prize taken" : escaped ? "Fog closes astern" : "The last bell"}</p>
-        <h3>{victory ? "The frigate strikes its colours" : escaped ? "The Wayward Gull escapes" : "Your vessel is lost"}</h3>
-        <p>{victory ? "Salvage what you can, tend the wounded, and choose the next course." : escaped ? "The crew lives to fight another day, though the damage remains." : "The sea takes ship, cargo, and every unfinished order."}</p>
+        <p className="eyebrow">{victory ? "Mech down" : escaped ? "Fog closes astern" : "The last bell"}</p>
+        <h3>{victory ? "The war-mech is silenced" : escaped ? "The Wayward Gull escapes" : "Your vessel is lost"}</h3>
+        <p>{victory ? "Salvage what you can from the wreckage, tend the wounded, and choose the next course." : escaped ? "The crew lives to fight another day, though the damage remains." : "The sea takes ship, cargo, and every unfinished order."}</p>
         <button className="primary-cta compact" onClick={battleState === "defeat" ? resetVoyage : returnToChart}>
           <CompassRose weight="fill" />
           <span><strong>{battleState === "defeat" ? "Begin another voyage" : "Return to chart"}</strong><small>{battleState === "defeat" ? "The sea remembers" : "Choose the next waters"}</small></span>
@@ -201,6 +201,7 @@ export function CombatScreen() {
   const player = useGameStore((state) => state.player);
   const enemy = useGameStore((state) => state.enemy);
   const crew = useGameStore((state) => state.crew);
+  const volleys = useGameStore((state) => state.volleys);
   const tick = useGameStore((state) => state.tick);
   const resetVoyage = useGameStore((state) => state.resetVoyage);
   const lookoutManned = crew.some((person) => !person.target && person.location === "lookout" && person.health > 0);
@@ -232,11 +233,11 @@ export function CombatScreen() {
 
   return (
     <section className="combat-screen screen">
-      <div className="scene-layer"><OceanScene player={player} enemy={enemy} crew={crew} fogDense={!lookoutManned} /></div>
+      <div className="scene-layer"><OceanScene player={player} enemy={enemy} crew={crew} volleys={volleys} fogDense={!lookoutManned} /></div>
       <div className={`fog-overlay ${lookoutManned ? "clear" : "dense"}`} />
 
       <VesselPlate />
-      <div className="encounter-banner"><small>Encounter</small><strong><Sword weight="fill" /> Enemy in range</strong></div>
+      <div className="encounter-banner"><small>Encounter</small><strong><Sword weight="fill" /> Mech in range</strong></div>
       <VesselPlate enemy />
 
       <div className="view-buttons">

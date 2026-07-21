@@ -80,7 +80,7 @@ export const stationData = {
     x: 8,
     y: 1,
     specialty: "Sight",
-    description: "Reveals enemy systems and improves accuracy.",
+    description: "Reveals mech systems and improves gunnery.",
   },
   sails: {
     id: "sails",
@@ -100,7 +100,7 @@ export const stationData = {
     x: 7,
     y: 4,
     specialty: "Gunnery",
-    description: "Loads and fires the port broadside.",
+    description: "Loads and fires the port cannon battery.",
   },
   starboardGuns: {
     id: "starboardGuns",
@@ -110,7 +110,7 @@ export const stationData = {
     x: 12,
     y: 4,
     specialty: "Gunnery",
-    description: "Loads and fires the starboard broadside.",
+    description: "Loads and fires the starboard cannon battery.",
   },
   carpenter: {
     id: "carpenter",
@@ -192,7 +192,7 @@ export const chartNodes = [
     type: "combat",
     x: 48,
     y: 31,
-    description: "A frigate has been hunting merchant traffic through the fog.",
+    description: "A war-mech has been shelling merchant traffic through the fog.",
     links: ["freeport"],
   },
   {
@@ -219,43 +219,50 @@ export const chartNodes = [
     type: "elite",
     x: 88,
     y: 24,
-    description: "The privateer flagship waits beyond the shoals.",
+    description: "A siege mech waits beyond the shoals, guns already warm.",
     links: [],
   },
+];
+
+export const targetSystems = [
+  { id: "hull", label: "Armor plating", detail: "Punch through the mech's outer shell." },
+  { id: "mobility", label: "Motive joints", detail: "Shatter legs and hip actuators." },
+  { id: "weapons", label: "Weapon pods", detail: "Silence the mech's gun batteries." },
+  { id: "crew", label: "Pilot & crew", detail: "Rake observation slits and break morale." },
 ];
 
 export const ammoData = {
   round: {
     label: "Round shot",
     hull: 15,
-    sails: 5,
+    mobility: 5,
     crew: 2,
     reload: 7.2,
-    detail: "Crush hull sections and open leaks.",
+    detail: "Crush armor plates and open breaches.",
   },
   chain: {
     label: "Chain shot",
     hull: 6,
-    sails: 20,
+    mobility: 20,
     crew: 1,
     reload: 6.2,
-    detail: "Tear rigging and cripple escape.",
+    detail: "Shear joints and cripple the mech's stride.",
   },
   grape: {
     label: "Grapeshot",
     hull: 3,
-    sails: 2,
+    mobility: 2,
     crew: 15,
     reload: 5.4,
-    detail: "Rake exposed decks and break morale.",
+    detail: "Rake observation slits and break morale.",
   },
   fire: {
     label: "Incendiary",
     hull: 8,
-    sails: 8,
+    mobility: 8,
     crew: 4,
     reload: 8.5,
-    detail: "Start fires that demand enemy crew.",
+    detail: "Ignite fuel lines that demand enemy crew.",
   },
 };
 
@@ -300,12 +307,13 @@ export function makePlayerShip() {
   };
 }
 
-export function makeEnemyShip() {
+export function makeEnemyMech() {
   return {
-    name: "Unknown Frigate",
+    name: "Unknown War-Mech",
+    kind: "mech",
     hull: 100,
     maxHull: 100,
-    sails: 100,
+    mobility: 100,
     crew: 100,
     fire: 0,
     morale: 100,
@@ -313,3 +321,6 @@ export function makeEnemyShip() {
     identified: false,
   };
 }
+
+/** @deprecated Use makeEnemyMech */
+export const makeEnemyShip = makeEnemyMech;

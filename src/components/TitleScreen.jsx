@@ -9,13 +9,13 @@ export function TitleScreen() {
     <section className="title-screen screen">
       <div className="title-atmosphere" />
       <div className="title-copy">
-        <p className="eyebrow">A ship combat roguelike</p>
+        <p className="eyebrow">An age-of-sail gunnery roguelike</p>
         <h1>
           <span>Rogue</span>
           Seas
         </h1>
         <div className="title-rule"><Anchor weight="fill" /></div>
-        <p className="title-tagline">Chart the unknown. Command your crew. Survive the broadside.</p>
+        <p className="title-tagline">Chart the unknown. Command your crew. Break the mechs with cannon fire.</p>
         <button className="primary-cta" onClick={beginVoyage}>
           <Play weight="fill" />
           <span>
