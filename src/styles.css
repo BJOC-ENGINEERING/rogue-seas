@@ -1240,16 +1240,15 @@ select:focus-visible {
 .combat-log {
   position: absolute;
   z-index: 7;
-  top: 154px;
-  left: 50%;
+  top: 112px;
+  left: 24px;
   bottom: auto;
-  width: 360px;
+  width: 320px;
   display: grid;
   gap: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
-  transform: translateX(-50%);
 }
 
 .combat-log li {
