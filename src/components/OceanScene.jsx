@@ -14,11 +14,15 @@ function LegoCaptainFigure({ firing }) {
     texture.anisotropy = 8;
   }, [texture]);
 
+  // Cutout is ~367x768 after background removal.
+  const height = 1.28;
+  const width = height * (367 / 768);
+
   return (
     <group>
-      {/* Selfie cutout rendered as the man on the boat */}
-      <mesh position={[0, 0.62, 0]} castShadow>
-        <planeGeometry args={[0.85, 1.28]} />
+      {/* Little-man cutout rendered as the crew on the boat */}
+      <mesh position={[0, height / 2 + 0.02, 0]} castShadow>
+        <planeGeometry args={[width, height]} />
         <meshBasicMaterial
           map={texture}
           transparent
@@ -285,22 +289,18 @@ function ShipModel({
   );
 }
 
-function ArmorPlate({ args, position, rotation = [0, 0, 0], color = "#3a454c", metalness = 0.72, roughness = 0.38 }) {
-  return (
-    <mesh position={position} rotation={rotation} castShadow receiveShadow>
-      <boxGeometry args={args} />
-      <meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />
-    </mesh>
-  );
-}
-
 function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw }) {
   const group = useRef();
-  const torso = useRef();
+  const texture = useTexture("/assets/textures/mech/big-robot.png");
   const damage = 100 - (enemy?.hull || 100);
   const mobility = enemy?.mobility ?? 100;
   const fire = enemy?.fire || 0;
   const limp = mobility < 45 ? 0.22 : 0.08;
+
+  useMemo(() => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 8;
+  }, [texture]);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -308,70 +308,28 @@ function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw
     group.current.position.y = position[1] + Math.sin(t * 1.1) * 0.05;
     group.current.rotation.y = yaw + Math.sin(t * 0.35) * 0.03;
     group.current.rotation.z = Math.sin(t * 0.7) * limp * 0.15;
-    if (torso.current) torso.current.rotation.y = Math.sin(t * 0.45) * 0.08;
   });
 
-  const plate = damage > 55 ? "#2a2220" : "#3d4850";
-  const accent = "#8a3a2a";
+  // Source image is ~168x315; keep that portrait aspect for the towering cutout.
+  const height = 4.6;
+  const width = height * (168 / 315);
 
   return (
     <group ref={group} position={position} rotation={[0, yaw, 0]}>
-      {/* Legs */}
-      <ArmorPlate args={[0.55, 1.35, 0.55]} position={[-0.45, 0.55, 0.15]} color={plate} />
-      <ArmorPlate args={[0.55, 1.35, 0.55]} position={[0.45, 0.55, 0.15]} color={plate} />
-      <ArmorPlate args={[0.7, 0.28, 0.95]} position={[-0.45, -0.05, 0.35]} color="#2b3238" />
-      <ArmorPlate args={[0.7, 0.28, 0.95]} position={[0.45, -0.05, 0.35]} color="#2b3238" />
-      <ArmorPlate args={[0.35, 0.55, 0.35]} position={[-0.45, 1.25, 0.05]} color="#505a62" />
-      <ArmorPlate args={[0.35, 0.55, 0.35]} position={[0.45, 1.25, 0.05]} color="#505a62" />
-
-      {/* Hip / pelvis */}
-      <ArmorPlate args={[1.35, 0.45, 0.85]} position={[0, 1.55, 0]} color="#333b42" />
-
-      <group ref={torso} position={[0, 1.85, 0]}>
-        {/* Torso */}
-        <ArmorPlate args={[1.55, 1.45, 1.05]} position={[0, 0.7, 0]} color={plate} />
-        <ArmorPlate args={[1.15, 0.55, 0.35]} position={[0, 1.15, 0.55]} color={accent} metalness={0.55} />
-        <ArmorPlate args={[0.55, 0.7, 0.55]} position={[0, 1.55, 0]} color="#1c2228" />
-        {/* Head / optics */}
-        <mesh position={[0, 1.95, 0.15]} castShadow>
-          <boxGeometry args={[0.7, 0.55, 0.65]} />
-          <meshStandardMaterial color="#1a1f24" metalness={0.8} roughness={0.28} />
-        </mesh>
-        <mesh position={[0, 1.95, 0.48]}>
-          <boxGeometry args={[0.42, 0.12, 0.08]} />
-          <meshStandardMaterial color="#ff6a2b" emissive="#ff3b00" emissiveIntensity={1.4} />
-        </mesh>
-        <pointLight position={[0, 1.95, 0.7]} color="#ff6a2b" intensity={1.2} distance={4} />
-
-        {/* Arms + gun pods */}
-        <ArmorPlate args={[0.38, 1.05, 0.38]} position={[-0.95, 0.55, 0.1]} rotation={[0.15, 0, 0.25]} color="#464f57" />
-        <ArmorPlate args={[0.38, 1.05, 0.38]} position={[0.95, 0.55, 0.1]} rotation={[0.15, 0, -0.25]} color="#464f57" />
-        <ArmorPlate args={[0.55, 0.45, 1.15]} position={[-1.15, 0.15, 0.55]} color="#2f363c" />
-        <ArmorPlate args={[0.55, 0.45, 1.15]} position={[1.15, 0.15, 0.55]} color="#2f363c" />
-        <mesh position={[-1.15, 0.15, 1.15]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.12, 0.14, 0.55, 10]} />
-          <meshStandardMaterial color="#1a1c1e" metalness={0.85} roughness={0.25} />
-        </mesh>
-        <mesh position={[1.15, 0.15, 1.15]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.12, 0.14, 0.55, 10]} />
-          <meshStandardMaterial color="#1a1c1e" metalness={0.85} roughness={0.25} />
-        </mesh>
-        <mesh position={[-1.15, -0.05, 0.85]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.08, 0.1, 0.4, 8]} />
-          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.2} />
-        </mesh>
-        <mesh position={[1.15, -0.05, 0.85]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.08, 0.1, 0.4, 8]} />
-          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.2} />
-        </mesh>
-      </group>
-
-      {/* Shoulder stacks */}
-      <ArmorPlate args={[0.7, 0.35, 0.7]} position={[-0.85, 2.55, -0.05]} color="#505862" />
-      <ArmorPlate args={[0.7, 0.35, 0.7]} position={[0.85, 2.55, -0.05]} color="#505862" />
+      <mesh position={[0, height / 2 - 0.15, 0]} castShadow>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          alphaTest={0.08}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          color={damage > 55 ? "#c8b4a8" : "#ffffff"}
+        />
+      </mesh>
 
       {fire > 5 && (
-        <group position={[0.2, 2.2, 0.1]}>
+        <group position={[0.15, height * 0.55, 0.12]}>
           <pointLight color="#ff6a24" intensity={Math.min(5, fire / 16)} distance={6} />
           <mesh>
             <sphereGeometry args={[0.28 + fire / 350, 12, 8]} />
@@ -380,19 +338,18 @@ function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw
         </group>
       )}
       {damage > 40 && (
-        <mesh position={[0.55, 2.1, 0.4]}>
+        <mesh position={[width * 0.28, height * 0.62, 0.08]}>
           <sphereGeometry args={[0.14, 8, 8]} />
           <meshBasicMaterial color="#120e0c" />
         </mesh>
       )}
       {mobility < 50 && (
-        <mesh position={[-0.45, 0.9, 0.4]} rotation={[0, 0, 0.4]}>
+        <mesh position={[-width * 0.2, height * 0.22, 0.1]} rotation={[0, 0, 0.4]}>
           <boxGeometry args={[0.12, 0.45, 0.12]} />
           <meshStandardMaterial color="#6a2a1a" emissive="#ff3a00" emissiveIntensity={0.6} />
         </mesh>
       )}
 
-      {/* Wake / footing in the surf */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.48, 0.2]}>
         <ringGeometry args={[0.9, 1.8, 40]} />
         <meshBasicMaterial color="#9ec9c2" transparent opacity={0.16} depthWrite={false} />
@@ -586,3 +543,4 @@ export function OceanScene({
 
 useGLTF.preload("/assets/models/ships/wayward-gull-detailed.glb");
 useTexture.preload("/assets/textures/crew/lego-captain.png");
+useTexture.preload("/assets/textures/mech/big-robot.png");
