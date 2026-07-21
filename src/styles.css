@@ -1204,10 +1204,10 @@ select:focus-visible {
 .ship-readouts {
   position: absolute;
   z-index: 7;
-  left: 446px;
-  bottom: 18px;
+  left: 106px;
+  bottom: 20px;
   display: grid;
-  grid-template-columns: repeat(4, 82px);
+  grid-template-columns: repeat(2, 108px);
   gap: 5px;
 }
 
@@ -1240,14 +1240,16 @@ select:focus-visible {
 .combat-log {
   position: absolute;
   z-index: 7;
-  left: 446px;
-  bottom: 65px;
-  width: 340px;
+  top: 154px;
+  left: 50%;
+  bottom: auto;
+  width: 360px;
   display: grid;
   gap: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
+  transform: translateX(-50%);
 }
 
 .combat-log li {
@@ -1266,11 +1268,13 @@ select:focus-visible {
 .combat-control-dock {
   position: absolute;
   z-index: 8;
-  right: 16px;
-  bottom: 16px;
+  left: 50%;
+  bottom: 20px;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
+  transform: translateX(-50%) scale(1.06);
+  transform-origin: center bottom;
 }
 
 .gunnery-panel {
@@ -1613,14 +1617,10 @@ select:focus-visible {
     width: 372px;
   }
 
-  .ship-readouts,
-  .combat-log {
-    left: 398px;
-  }
+  .ship-readouts { left: 88px; }
 
   .combat-control-dock {
-    transform: scale(0.88);
-    transform-origin: right bottom;
+    transform: translateX(-50%) scale(0.96);
   }
 }
 
@@ -1649,7 +1649,7 @@ select:focus-visible {
   }
   .ship-readouts,
   .combat-log { display: none; }
-  .combat-control-dock { transform: scale(0.72); }
+  .combat-control-dock { transform: translateX(-50%) scale(0.78); }
   .view-buttons { transform: scale(0.84); transform-origin: right top; }
 }
 
@@ -1672,7 +1672,7 @@ select:focus-visible {
   .time-controls { top: 78px; left: auto; right: 10px; transform: none; }
   .combat-alerts { top: 112px; left: auto; right: 10px; transform: none; align-items: end; }
   .view-buttons { display: none; }
-  .combat-control-dock { right: 5px; bottom: 5px; transform: scale(0.58); }
+  .combat-control-dock { left: 50%; right: auto; bottom: 5px; transform: translateX(-50%) scale(0.62); }
   .combat-compass { display: none; }
   .camera-hint { display: none; }
 }
