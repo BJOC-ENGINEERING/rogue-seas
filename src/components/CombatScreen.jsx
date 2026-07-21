@@ -18,6 +18,7 @@ import {
   Wind,
 } from "@phosphor-icons/react";
 import { ammoData, targetSystems } from "../gameData";
+import { MAX_FRAME_INTERVAL } from "../frameRate";
 import { useGameStore } from "../store";
 import { OceanScene } from "./OceanScene";
 
@@ -207,10 +208,12 @@ export function CombatScreen() {
 
   useEffect(() => {
     let frame;
-    let last = performance.now();
+    let lastTick = 0;
     const loop = (time) => {
-      tick((time - last) / 1000);
-      last = time;
+      if (!lastTick || time - lastTick >= MAX_FRAME_INTERVAL - 0.5) {
+        tick((time - lastTick || MAX_FRAME_INTERVAL) / 1000);
+        lastTick = time;
+      }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
