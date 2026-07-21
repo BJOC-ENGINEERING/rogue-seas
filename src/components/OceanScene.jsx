@@ -7,33 +7,40 @@ import { MAX_FRAME_INTERVAL } from "../frameRate";
 
 const GUNNER_INDICES = [1, 3, 5];
 
-function SailorFigure({ color, firing }) {
+function LegoCaptainFigure({ firing }) {
+  const texture = useTexture("/assets/textures/crew/lego-captain.png");
+  useMemo(() => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 8;
+  }, [texture]);
+
   return (
     <group>
-      <mesh position={[-0.09, 0.12, 0]} castShadow>
-        <boxGeometry args={[0.13, 0.24, 0.13]} />
-        <meshStandardMaterial color="#202832" roughness={0.72} />
+      {/* Full LEGO captain cutout — the man on the boat */}
+      <mesh position={[0, 0.52, 0]} castShadow>
+        <planeGeometry args={[0.58, 0.9]} />
+        <meshStandardMaterial
+          map={texture}
+          transparent
+          alphaTest={0.08}
+          side={THREE.DoubleSide}
+          roughness={0.55}
+          metalness={0.05}
+        />
       </mesh>
-      <mesh position={[0.09, 0.12, 0]} castShadow>
-        <boxGeometry args={[0.13, 0.24, 0.13]} />
-        <meshStandardMaterial color="#202832" roughness={0.72} />
+      {/* Thin body so the figure reads in silhouette when orbiting */}
+      <mesh position={[0, 0.28, -0.01]} castShadow>
+        <boxGeometry args={[0.2, 0.42, 0.08]} />
+        <meshStandardMaterial color="#111418" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 0.4, 0]} castShadow>
-        <boxGeometry args={[0.34, 0.36, 0.2]} />
-        <meshStandardMaterial color={color} roughness={0.68} />
-      </mesh>
-      <mesh position={[0, 0.7, 0]} castShadow>
-        <sphereGeometry args={[0.16, 10, 8]} />
-        <meshStandardMaterial color="#d8a573" roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0.82, 0]} castShadow>
-        <cylinderGeometry args={[0.18, 0.18, 0.07, 10]} />
-        <meshStandardMaterial color="#202832" roughness={0.75} />
+      <mesh position={[0, 0.62, -0.01]} castShadow>
+        <cylinderGeometry args={[0.11, 0.11, 0.2, 12]} />
+        <meshStandardMaterial color="#f2c41a" roughness={0.55} />
       </mesh>
       {firing && (
-        <mesh position={[0, 0.45, 0.28]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.045, 0.06, 0.45, 8]} />
-          <meshStandardMaterial color="#2b2118" metalness={0.5} roughness={0.5} />
+        <mesh position={[0.18, 0.42, 0.2]} rotation={[Math.PI / 2, 0.15, 0]} castShadow>
+          <cylinderGeometry args={[0.04, 0.055, 0.42, 8]} />
+          <meshStandardMaterial color="#2b2118" metalness={0.55} roughness={0.45} />
         </mesh>
       )}
     </group>
@@ -42,16 +49,6 @@ function SailorFigure({ color, firing }) {
 
 function CrewModel({ member, position, side, firing }) {
   const group = useRef();
-  const { scene } = useGLTF(member.model);
-  const clone = useMemo(() => scene.clone(true), [scene]);
-
-  useEffect(() => {
-    clone.traverse((child) => {
-      if (!child.isMesh) return;
-      child.castShadow = true;
-      child.receiveShadow = true;
-    });
-  }, [clone]);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -65,11 +62,10 @@ function CrewModel({ member, position, side, firing }) {
       ref={group}
       position={position}
       rotation={[0, side === "port" ? Math.PI / 2 : -Math.PI / 2, 0]}
-      scale={0.9}
+      scale={1.05}
       visible={member.health > 0}
     >
-      <primitive object={clone} />
-      <SailorFigure color={member.color} firing={firing} />
+      <LegoCaptainFigure firing={firing} />
     </group>
   );
 }
@@ -599,9 +595,4 @@ export function OceanScene({
 }
 
 useGLTF.preload("/assets/models/ships/wayward-gull-detailed.glb");
-useGLTF.preload("/assets/models/crew/character-female-a.glb");
-useGLTF.preload("/assets/models/crew/character-male-a.glb");
-useGLTF.preload("/assets/models/crew/character-female-b.glb");
-useGLTF.preload("/assets/models/crew/character-male-b.glb");
-useGLTF.preload("/assets/models/crew/character-male-c.glb");
-useGLTF.preload("/assets/models/crew/character-female-c.glb");
+useTexture.preload("/assets/textures/crew/lego-captain.png");
