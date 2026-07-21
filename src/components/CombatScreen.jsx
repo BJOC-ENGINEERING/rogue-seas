@@ -19,7 +19,6 @@ import {
 } from "@phosphor-icons/react";
 import { ammoData, targetSystems } from "../gameData";
 import { useGameStore } from "../store";
-import { CrewPanel } from "./CrewPanel";
 import { OceanScene } from "./OceanScene";
 
 function Meter({ value, tone = "gold", label }) {
@@ -248,7 +247,6 @@ export function CombatScreen() {
 
       <TimeControls />
       <CombatAlerts />
-      <CrewPanel />
       <ShipReadouts />
       <CombatLog />
       <div className="combat-control-dock"><GunneryControls /><HelmControls /></div>
