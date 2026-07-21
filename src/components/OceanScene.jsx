@@ -16,29 +16,19 @@ function LegoCaptainFigure({ firing }) {
 
   return (
     <group>
-      {/* Full LEGO captain cutout — the man on the boat */}
-      <mesh position={[0, 0.52, 0]} castShadow>
-        <planeGeometry args={[0.58, 0.9]} />
-        <meshStandardMaterial
+      {/* Selfie cutout rendered as the man on the boat */}
+      <mesh position={[0, 0.62, 0]} castShadow>
+        <planeGeometry args={[0.85, 1.28]} />
+        <meshBasicMaterial
           map={texture}
           transparent
-          alphaTest={0.08}
+          alphaTest={0.12}
           side={THREE.DoubleSide}
-          roughness={0.55}
-          metalness={0.05}
+          depthWrite={false}
         />
       </mesh>
-      {/* Thin body so the figure reads in silhouette when orbiting */}
-      <mesh position={[0, 0.28, -0.01]} castShadow>
-        <boxGeometry args={[0.2, 0.42, 0.08]} />
-        <meshStandardMaterial color="#111418" roughness={0.8} />
-      </mesh>
-      <mesh position={[0, 0.62, -0.01]} castShadow>
-        <cylinderGeometry args={[0.11, 0.11, 0.2, 12]} />
-        <meshStandardMaterial color="#f2c41a" roughness={0.55} />
-      </mesh>
       {firing && (
-        <mesh position={[0.18, 0.42, 0.2]} rotation={[Math.PI / 2, 0.15, 0]} castShadow>
+        <mesh position={[0.22, 0.5, 0.22]} rotation={[Math.PI / 2, 0.15, 0]} castShadow>
           <cylinderGeometry args={[0.04, 0.055, 0.42, 8]} />
           <meshStandardMaterial color="#2b2118" metalness={0.55} roughness={0.45} />
         </mesh>
@@ -62,7 +52,7 @@ function CrewModel({ member, position, side, firing }) {
       ref={group}
       position={position}
       rotation={[0, side === "port" ? Math.PI / 2 : -Math.PI / 2, 0]}
-      scale={1.05}
+      scale={1.15}
       visible={member.health > 0}
     >
       <LegoCaptainFigure firing={firing} />
