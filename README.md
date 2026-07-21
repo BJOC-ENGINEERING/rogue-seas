@@ -13,7 +13,7 @@ Rogue Seas is a single-player, offline-first prototype. There are no accounts, a
 
 ## Play
 
-**Live game:** deployment link will be added after the first production release.
+**Live game:** [rogue-seas.vercel.app](https://rogue-seas.vercel.app/)
 
 The game runs best in a modern desktop browser with WebGL enabled.
 

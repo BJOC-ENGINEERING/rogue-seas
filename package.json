@@ -8,6 +8,7 @@
     "type": "git",
     "url": "https://github.com/BJOC-ENGINEERING/rogue-seas.git"
   },
+  "homepage": "https://rogue-seas.vercel.app/",
   "engines": {
     "node": ">=20"
   },
