@@ -2,23 +2,111 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { ENEMY_MECH, PLAYER_SHIP } from "../battleLayout";
+import { ENEMY_MECH, PLAYER_SHIP, PORT_GUNS, STARBOARD_GUNS } from "../battleLayout";
 import { MAX_FRAME_INTERVAL } from "../frameRate";
 
-const stationWorldPositions = {
-  helm: [-1.65, 1.02, 0.15],
-  lookout: [0.1, 1.55, -0.08],
-  sails: [0.25, 1.1, -0.05],
-  portGuns: [0.1, 0.85, 0.72],
-  starboardGuns: [0.7, 0.85, -0.62],
-  carpenter: [-0.65, 0.9, 0.48],
-  surgeon: [-0.3, 0.9, -0.45],
-  pumps: [0.9, 0.68, 0.18],
-  magazine: [1.25, 0.7, -0.18],
-  fire: [0.15, 0.87, 0.16],
-  leak: [0.75, 0.68, 0.1],
-  deck: [-1.1, 0.88, -0.2],
-};
+const GUNNER_INDICES = [1, 3, 5];
+
+function SailorFigure({ color, firing }) {
+  return (
+    <group>
+      <mesh position={[-0.09, 0.12, 0]} castShadow>
+        <boxGeometry args={[0.13, 0.24, 0.13]} />
+        <meshStandardMaterial color="#202832" roughness={0.72} />
+      </mesh>
+      <mesh position={[0.09, 0.12, 0]} castShadow>
+        <boxGeometry args={[0.13, 0.24, 0.13]} />
+        <meshStandardMaterial color="#202832" roughness={0.72} />
+      </mesh>
+      <mesh position={[0, 0.4, 0]} castShadow>
+        <boxGeometry args={[0.34, 0.36, 0.2]} />
+        <meshStandardMaterial color={color} roughness={0.68} />
+      </mesh>
+      <mesh position={[0, 0.7, 0]} castShadow>
+        <sphereGeometry args={[0.16, 10, 8]} />
+        <meshStandardMaterial color="#d8a573" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.82, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.18, 0.07, 10]} />
+        <meshStandardMaterial color="#202832" roughness={0.75} />
+      </mesh>
+      {firing && (
+        <mesh position={[0, 0.45, 0.28]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.045, 0.06, 0.45, 8]} />
+          <meshStandardMaterial color="#2b2118" metalness={0.5} roughness={0.5} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+function CrewModel({ member, position, side, firing }) {
+  const group = useRef();
+  const { scene } = useGLTF(member.model);
+  const clone = useMemo(() => scene.clone(true), [scene]);
+
+  useEffect(() => {
+    clone.traverse((child) => {
+      if (!child.isMesh) return;
+      child.castShadow = true;
+      child.receiveShadow = true;
+    });
+  }, [clone]);
+
+  useFrame(({ clock }) => {
+    if (!group.current) return;
+    const pulse = firing ? Math.sin(clock.elapsedTime * 28) * 0.035 : Math.sin(clock.elapsedTime * 1.7) * 0.008;
+    group.current.position.y = position[1] + pulse;
+    group.current.rotation.x = firing ? -0.14 : 0;
+  });
+
+  return (
+    <group
+      ref={group}
+      position={position}
+      rotation={[0, side === "port" ? Math.PI / 2 : -Math.PI / 2, 0]}
+      scale={0.9}
+      visible={member.health > 0}
+    >
+      <primitive object={clone} />
+      <SailorFigure color={member.color} firing={firing} />
+    </group>
+  );
+}
+
+function DeckCrew({ crew = [], volleys = [] }) {
+  const activeVolley = [...volleys].reverse().find((volley) => (
+    volley.side === "player"
+    && volley.shots.some((shot) => volley.age >= shot.fireDelay && volley.age - shot.fireDelay < 0.24)
+  ));
+  const firingSide = activeVolley?.battery;
+  const stations = [
+    ...GUNNER_INDICES.map((index, crewIndex) => ({
+      member: crew[crewIndex],
+      position: [PORT_GUNS[index][0], PORT_GUNS[index][1] + 0.1, PORT_GUNS[index][2] * 0.55],
+      side: "port",
+    })),
+    ...GUNNER_INDICES.map((index, crewIndex) => ({
+      member: crew[crewIndex + 3],
+      position: [STARBOARD_GUNS[index][0], STARBOARD_GUNS[index][1] + 0.1, STARBOARD_GUNS[index][2] * 0.55],
+      side: "starboard",
+    })),
+  ];
+
+  return (
+    <group>
+      {stations.map(({ member, position, side }, index) => member && (
+        <CrewModel
+          key={member.id}
+          member={member}
+          position={position}
+          side={side}
+          firing={firingSide === side}
+        />
+      ))}
+    </group>
+  );
+}
 
 function FrameLimiter() {
   const invalidate = useThree((state) => state.invalidate);
@@ -155,34 +243,15 @@ function OceanSurface({ calm = false }) {
   );
 }
 
-function CrewModel({ member, index }) {
-  const { scene } = useGLTF(member.model);
-  const clone = useMemo(() => scene.clone(true), [scene]);
-  const target = stationWorldPositions[member.target || member.location] || stationWorldPositions.deck;
-  const start = stationWorldPositions[member.location] || stationWorldPositions.deck;
-  const progress = member.target ? member.moveProgress : 1;
-  const position = [
-    THREE.MathUtils.lerp(start[0], target[0], progress),
-    THREE.MathUtils.lerp(start[1], target[1], progress),
-    THREE.MathUtils.lerp(start[2], target[2], progress),
-  ];
-
-  return (
-    <group position={position} rotation={[0, index % 2 ? -0.5 : 0.55, 0]} scale={0.075} visible={member.health > 0}>
-      <primitive object={clone} />
-      <pointLight color={member.color} intensity={0.45} distance={1.8} position={[0, 2.5, 0]} />
-    </group>
-  );
-}
-
 function ShipModel({
   url,
   position,
   rotation,
   scale = 1,
-  crew = [],
   damage = 0,
   fire = 0,
+  crew = [],
+  volleys = [],
 }) {
   const group = useRef();
   const { scene } = useGLTF(url);
@@ -206,9 +275,7 @@ function ShipModel({
   return (
     <group ref={group} position={position} rotation={rotation} scale={scale}>
       <primitive object={clone} castShadow receiveShadow />
-      {crew.map((member, index) => (
-        <CrewModel key={member.id} member={member} index={index} />
-      ))}
+      <DeckCrew crew={crew} volleys={volleys} />
       {fire > 5 && (
         <group position={[0.15, 1.2, 0.1]}>
           <pointLight color="#ff6a24" intensity={Math.min(4, fire / 18)} distance={5} />
@@ -484,9 +551,10 @@ function SceneContent({ variant, player, enemy, crew, fogDense, volleys }) {
         position={title ? [0, -0.05, 0] : PLAYER_SHIP.position}
         rotation={playerRotation}
         scale={title ? 0.86 : PLAYER_SHIP.scale}
-        crew={title ? [] : crew}
         fire={player?.fire || 0}
         damage={100 - (player?.hull || 100)}
+        crew={title ? [] : crew}
+        volleys={volleys}
       />
       {!title && <MechModel enemy={enemy} />}
       {!title && <VolleyEffects volleys={volleys} />}
@@ -531,3 +599,9 @@ export function OceanScene({
 }
 
 useGLTF.preload("/assets/models/ships/wayward-gull-detailed.glb");
+useGLTF.preload("/assets/models/crew/character-female-a.glb");
+useGLTF.preload("/assets/models/crew/character-male-a.glb");
+useGLTF.preload("/assets/models/crew/character-female-b.glb");
+useGLTF.preload("/assets/models/crew/character-male-b.glb");
+useGLTF.preload("/assets/models/crew/character-male-c.glb");
+useGLTF.preload("/assets/models/crew/character-female-c.glb");
