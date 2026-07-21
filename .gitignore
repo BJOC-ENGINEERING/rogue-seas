@@ -1,0 +1,32 @@
+# Dependencies and build output
+node_modules/
+dist/
+.npm-cache/
+.npmrc
+
+# Local configuration and deployment state
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Design references and local QA artifacts
+work/
+design-qa.md
+AGENTS.md
+
+# Unused source-library models retained only in the local prototype workspace
+public/assets/models/barrel.glb
+public/assets/models/cannon.glb
+public/assets/models/flag.glb
+public/assets/models/ship-large.glb
+public/assets/models/ship-pirate-medium.glb
+public/assets/models/character-*.glb
+public/assets/models/pirate/
+
+# Editor and operating-system files
+.DS_Store
+*.log
+*.swp
+.idea/
+.vscode/

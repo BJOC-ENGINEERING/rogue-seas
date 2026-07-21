@@ -1,0 +1,259 @@
+import { useEffect } from "react";
+import {
+  ArrowCounterClockwise,
+  Binoculars,
+  CaretLeft,
+  CaretRight,
+  CompassRose,
+  Crosshair,
+  Drop,
+  Eye,
+  Flame,
+  GridFour,
+  Pause,
+  Play,
+  Stack,
+  SteeringWheel,
+  Sword,
+  Wind,
+} from "@phosphor-icons/react";
+import { ammoData } from "../gameData";
+import { useGameStore } from "../store";
+import { CrewPanel } from "./CrewPanel";
+import { OceanScene } from "./OceanScene";
+
+function Meter({ value, tone = "gold", label }) {
+  return (
+    <div className={`meter ${tone}`} aria-label={`${label}: ${Math.round(value)} percent`}>
+      <span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+    </div>
+  );
+}
+
+function VesselPlate({ enemy = false }) {
+  const player = useGameStore((state) => state.player);
+  const foe = useGameStore((state) => state.enemy);
+  const ship = enemy ? foe : player;
+  return (
+    <section className={`vessel-plate ${enemy ? "enemy" : "player"}`}>
+      {!enemy && <span className="vessel-monogram">RS</span>}
+      <div>
+        <small>{enemy ? "Hostile vessel" : "Your vessel"}</small>
+        <strong>{enemy && !foe.identified ? "Unknown Frigate" : ship.name}</strong>
+        <Meter value={ship.hull} tone={ship.hull < 35 ? "red" : "gold"} label="Hull" />
+      </div>
+      {enemy && <span className="vessel-monogram"><Sword weight="fill" /></span>}
+    </section>
+  );
+}
+
+function HelmControls() {
+  const player = useGameStore((state) => state.player);
+  const crew = useGameStore((state) => state.crew);
+  const turnHelm = useGameStore((state) => state.turnHelm);
+  const centerHelm = useGameStore((state) => state.centerHelm);
+  const setThrottle = useGameStore((state) => state.setThrottle);
+  const helmManned = crew.some((person) => !person.target && person.location === "helm" && person.health > 0);
+  const sailsManned = crew.some((person) => !person.target && person.location === "sails" && person.health > 0);
+
+  return (
+    <section className="helm-cluster">
+      <div className="helm-panel ink-panel">
+        <header><strong>Helm</strong><span>{helmManned ? `${player.heading > 0 ? "Starboard" : player.heading < 0 ? "Port" : "Amidships"} ${Math.abs(player.heading)}°` : "Locked · unmanned"}</span></header>
+        <div className="wheel-row">
+          <button onClick={() => turnHelm(-1)} aria-label="Turn to port"><CaretLeft weight="bold" /></button>
+          <SteeringWheel className={helmManned ? "manned" : ""} weight="duotone" />
+          <button onClick={() => turnHelm(1)} aria-label="Turn to starboard"><CaretRight weight="bold" /></button>
+        </div>
+        <button className="center-wheel" onClick={centerHelm}>Center wheel</button>
+        <footer><span>Port</span><i /><span>Starboard</span></footer>
+      </div>
+      <div className="speed-panel ink-panel">
+        <header><strong>Speed</strong><span>{player.throttle}</span></header>
+        <div className="throttle-slots">
+          {[0, 1, 2, 3, 4].map((value) => (
+            <button key={value} className={player.throttle === value ? "active" : ""} onClick={() => setThrottle(value)}>
+              <i style={{ height: `${18 + value * 10}px` }} />
+              <span>{value}</span>
+            </button>
+          ))}
+        </div>
+        <small>{sailsManned ? "Sails responding" : "Sails unmanned"}</small>
+      </div>
+    </section>
+  );
+}
+
+function GunneryControls() {
+  const player = useGameStore((state) => state.player);
+  const ammo = useGameStore((state) => state.ammo);
+  const targetSystem = useGameStore((state) => state.targetSystem);
+  const setAmmo = useGameStore((state) => state.setAmmo);
+  const setTargetSystem = useGameStore((state) => state.setTargetSystem);
+  const fireBroadside = useGameStore((state) => state.fireBroadside);
+  const attemptRetreat = useGameStore((state) => state.attemptRetreat);
+
+  return (
+    <section className="gunnery-panel ink-panel">
+      <header>
+        <div><small>Gun deck</small><strong>Broadside Orders</strong></div>
+        <span className={player.reload > 0 ? "reloading" : "ready"}>{player.reload > 0 ? `${player.reload.toFixed(1)}s` : "Ready"}</span>
+      </header>
+      <div className="ammo-tabs">
+        {Object.entries(ammoData).map(([id, item]) => (
+          <button key={id} className={ammo === id ? "active" : ""} onClick={() => setAmmo(id)} title={item.detail}>
+            {item.label.replace(" shot", "")}
+          </button>
+        ))}
+      </div>
+      <label>
+        <span>Target</span>
+        <select value={targetSystem} onChange={(event) => setTargetSystem(event.target.value)}>
+          <option value="hull">Hull sections</option>
+          <option value="sails">Sails &amp; rigging</option>
+          <option value="weapons">Gun batteries</option>
+          <option value="crew">Exposed crew</option>
+        </select>
+      </label>
+      <button className="fire-button" onClick={fireBroadside} disabled={player.reload > 0}>
+        <Crosshair weight="bold" /> {player.reload > 0 ? "Reloading" : "Fire broadside"}
+      </button>
+      <button className="retreat-button" onClick={attemptRetreat}><Wind /> Break away into fog</button>
+    </section>
+  );
+}
+
+function TimeControls() {
+  const paused = useGameStore((state) => state.paused);
+  const timeScale = useGameStore((state) => state.timeScale);
+  const togglePause = useGameStore((state) => state.togglePause);
+  const setTimeScale = useGameStore((state) => state.setTimeScale);
+  return (
+    <div className="time-controls">
+      <button className={paused ? "active" : ""} onClick={togglePause} aria-label={paused ? "Resume" : "Pause"}>
+        {paused ? <Play weight="fill" /> : <Pause weight="fill" />}
+      </button>
+      {[1, 2, 3].map((speed) => <button key={speed} className={!paused && timeScale === speed ? "active" : ""} onClick={() => setTimeScale(speed)}>{speed}×</button>)}
+    </div>
+  );
+}
+
+function CombatAlerts() {
+  const player = useGameStore((state) => state.player);
+  const crew = useGameStore((state) => state.crew);
+  const assignSelectedCrew = useGameStore((state) => state.assignSelectedCrew);
+  const lookout = crew.some((person) => !person.target && person.location === "lookout" && person.health > 0);
+  return (
+    <div className="combat-alerts">
+      {!lookout && <button onClick={() => assignSelectedCrew("lookout")}><Binoculars /> Lookout unmanned · visibility limited</button>}
+      {player.fire > 1 && <button className="danger" onClick={() => assignSelectedCrew("fire")}><Flame weight="fill" /> Fire on top deck · assign crew</button>}
+      {player.flood > 1 && <button className="water" onClick={() => assignSelectedCrew("leak")}><Drop weight="fill" /> Flooding below · patch leak</button>}
+    </div>
+  );
+}
+
+function ShipReadouts() {
+  const player = useGameStore((state) => state.player);
+  const enemy = useGameStore((state) => state.enemy);
+  return (
+    <div className="ship-readouts">
+      <section><span>Hull</span><strong>{Math.round(player.hull)}</strong><Meter value={player.hull} tone={player.hull < 35 ? "red" : "gold"} label="Player hull" /></section>
+      <section><span>Flood</span><strong>{Math.round(player.flood)}</strong><Meter value={player.flood} tone="blue" label="Flooding" /></section>
+      <section><span>Fire</span><strong>{Math.round(player.fire)}</strong><Meter value={player.fire} tone="red" label="Fire" /></section>
+      <section><span>Enemy</span><strong>{Math.round(enemy.hull)}</strong><Meter value={enemy.hull} tone="red" label="Enemy hull" /></section>
+    </div>
+  );
+}
+
+function CombatLog() {
+  const log = useGameStore((state) => state.log);
+  return (
+    <ol className="combat-log" aria-live="polite">
+      {log.slice(0, 4).map((entry) => <li key={entry.id} className={entry.tone}>{entry.text}</li>)}
+    </ol>
+  );
+}
+
+function BattleOutcome() {
+  const battleState = useGameStore((state) => state.battleState);
+  const returnToChart = useGameStore((state) => state.returnToChart);
+  const resetVoyage = useGameStore((state) => state.resetVoyage);
+  if (battleState === "engaged") return null;
+  const victory = battleState === "victory";
+  const escaped = battleState === "escaped";
+  return (
+    <div className="modal-backdrop battle-outcome">
+      <section className="encounter-card">
+        <span className="encounter-seal">{victory ? <Sword weight="fill" /> : escaped ? <Wind weight="fill" /> : <Drop weight="fill" />}</span>
+        <p className="eyebrow">{victory ? "Prize taken" : escaped ? "Fog closes astern" : "The last bell"}</p>
+        <h3>{victory ? "The frigate strikes its colours" : escaped ? "The Wayward Gull escapes" : "Your vessel is lost"}</h3>
+        <p>{victory ? "Salvage what you can, tend the wounded, and choose the next course." : escaped ? "The crew lives to fight another day, though the damage remains." : "The sea takes ship, cargo, and every unfinished order."}</p>
+        <button className="primary-cta compact" onClick={battleState === "defeat" ? resetVoyage : returnToChart}>
+          <CompassRose weight="fill" />
+          <span><strong>{battleState === "defeat" ? "Begin another voyage" : "Return to chart"}</strong><small>{battleState === "defeat" ? "The sea remembers" : "Choose the next waters"}</small></span>
+        </button>
+      </section>
+    </div>
+  );
+}
+
+export function CombatScreen() {
+  const player = useGameStore((state) => state.player);
+  const enemy = useGameStore((state) => state.enemy);
+  const crew = useGameStore((state) => state.crew);
+  const tick = useGameStore((state) => state.tick);
+  const resetVoyage = useGameStore((state) => state.resetVoyage);
+  const lookoutManned = crew.some((person) => !person.target && person.location === "lookout" && person.health > 0);
+
+  useEffect(() => {
+    let frame;
+    let last = performance.now();
+    const loop = (time) => {
+      tick((time - last) / 1000);
+      last = time;
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, [tick]);
+
+  useEffect(() => {
+    const handleKey = (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        useGameStore.getState().togglePause();
+      }
+      if (event.key === "f") useGameStore.getState().fireBroadside();
+      if (["1", "2", "3"].includes(event.key)) useGameStore.getState().setTimeScale(Number(event.key));
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  return (
+    <section className="combat-screen screen">
+      <div className="scene-layer"><OceanScene player={player} enemy={enemy} crew={crew} fogDense={!lookoutManned} /></div>
+      <div className={`fog-overlay ${lookoutManned ? "clear" : "dense"}`} />
+
+      <VesselPlate />
+      <div className="encounter-banner"><small>Encounter</small><strong><Sword weight="fill" /> Enemy in range</strong></div>
+      <VesselPlate enemy />
+
+      <div className="view-buttons">
+        <button onClick={() => window.dispatchEvent(new Event("rogue-seas-reset-camera"))}><Stack weight="duotone" /><span><small>Camera</small><strong>Reset view</strong></span></button>
+        <button><GridFour weight="duotone" /><span><small>Movement</small><strong>WASD + drag</strong></span></button>
+        <button onClick={resetVoyage}><ArrowCounterClockwise /><strong>Reset voyage</strong></button>
+      </div>
+
+      <TimeControls />
+      <CombatAlerts />
+      <CrewPanel />
+      <ShipReadouts />
+      <CombatLog />
+      <div className="combat-control-dock"><GunneryControls /><HelmControls /></div>
+      <CompassRose className="combat-compass" weight="duotone" />
+      <div className="camera-hint"><Eye /> WASD to move <i /> Drag to look <i /> Scroll to zoom <i /> R resets <i /> Space pauses</div>
+      <BattleOutcome />
+    </section>
+  );
+}
