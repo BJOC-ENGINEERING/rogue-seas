@@ -125,9 +125,9 @@ export function ChartScreen() {
           <section className="encounter-card" role="dialog" aria-modal="true" aria-labelledby="encounter-title">
             <button className="modal-close" onClick={closeEncounter} aria-label="Close encounter"><X /></button>
             <span className="encounter-seal"><Skull weight="fill" /></span>
-            <p className="eyebrow">Sail to the sound of guns</p>
-            <h3 id="encounter-title">You encounter an enemy ship</h3>
-            <p>A black-flag frigate emerges from the fog and turns to bring its guns to bear.</p>
+            <p className="eyebrow">Sail to the sound of wings</p>
+            <h3 id="encounter-title">You encounter a giant swarm</h3>
+            <p>A living cloud of evil bees and wasps boils out of the fog and turns to bring its stingers to bear.</p>
             <button className="primary-cta compact" onClick={startEncounter}>
               <FlagBanner weight="fill" />
               <span><strong>Fight</strong><small>Beat to quarters</small></span>
