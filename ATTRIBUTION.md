@@ -3,7 +3,9 @@
 - `public/assets/models/crew/character-*.glb`: Kenney Mini Characters, CC0. https://kenney.nl/assets/mini-characters (kept in repo; deck crew now uses the LEGO captain texture)
 - `public/assets/textures/crew/lego-captain.png`: custom LEGO minifigure captain portrait generated for Rogue Seas
 - `public/assets/textures/storm-sea.png` and `captains-chart.png`: original generated artwork created for Rogue Seas with OpenAI image generation.
+- `public/assets/textures/mech/big-robot.png`: custom photo cutout kept as reference art; combat now uses the Blender mech.
 - `public/assets/models/ships/wayward-gull-detailed.glb`: original browser-game asset generated in Blender from `scripts/build_detailed_ship.py`.
+- `public/assets/models/mechs/iron-leviathan.glb`: original browser-game asset generated in Blender from `scripts/build_war_mech.py`.
 - Cinzel, Cormorant Garamond, and Barlow Condensed fonts are distributed through Fontsource under their respective open font licenses.
 
 Third-party trademarks and product names belong to their respective owners. No third-party gameplay code is included.

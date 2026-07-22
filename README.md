@@ -81,23 +81,28 @@ Zustand simulation store
         │
         ▼
 React Three Fiber / Three.js
-├── Blender-generated glTF ships
-├── Procedural war-mechs and visual volleys
+├── Blender-generated glTF ships and war-mechs
+├── Procedural visual volleys
 ├── Ocean, fog, lighting, and wake
 └── Crew, damage, and camera presentation
 ```
 
 Simulation state is kept separate from 3D presentation so combat rules can grow without replacing the renderer or interface. Volleys live in the store; the scene only samples flight arcs and muzzle timing.
 
-## Rebuild the detailed ship
+## Rebuild Blender assets
 
-Blender is optional for playing or developing the game. It is only needed to regenerate the main glTF ship asset.
+Blender is optional for playing or developing the game. It is only needed to regenerate the glTF ship and war-mech.
 
 ```bash
-blender --background --python scripts/build_detailed_ship.py
+npm run assets
+# or individually:
+npm run assets:ship
+npm run assets:mech
 ```
 
-The script procedurally builds the layered hull, gun battery, decks, rails, three masts, yards, sails, standing and running rigging, ratlines, fittings, lanterns, flag, and wake. It exports the browser-ready model to `public/assets/models/ships/wayward-gull-detailed.glb`.
+`scripts/build_detailed_ship.py` procedurally builds the layered hull, gun battery, decks, rails, three masts, yards, denser sails, standing and running rigging, ratlines, figurehead, anchors, fittings, lanterns, flag, and wake. It exports to `public/assets/models/ships/wayward-gull-detailed.glb`.
+
+`scripts/build_war_mech.py` builds the Iron Leviathan siege mech (armor plates, joints, forearm weapon pods aligned to combat hardpoints) and exports to `public/assets/models/mechs/iron-leviathan.glb`.
 
 ## Project structure
 

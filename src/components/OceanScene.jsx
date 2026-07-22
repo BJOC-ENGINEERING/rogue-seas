@@ -289,18 +289,42 @@ function ShipModel({
   );
 }
 
-function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw }) {
+function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw, scale = ENEMY_MECH.scale }) {
   const group = useRef();
-  const texture = useTexture("/assets/textures/mech/big-robot.png");
+  const { scene } = useGLTF("/assets/models/mechs/iron-leviathan.glb");
+  const baseColors = useRef(new Map());
+  const clone = useMemo(() => {
+    const object = scene.clone(true);
+    baseColors.current.clear();
+    object.traverse((child) => {
+      if (!child.isMesh) return;
+      child.castShadow = true;
+      child.receiveShadow = true;
+      if (child.material) {
+        child.material = child.material.clone();
+        if (child.material.color) {
+          baseColors.current.set(child.uuid, child.material.color.clone());
+        }
+      }
+    });
+    return object;
+  }, [scene]);
+
   const damage = 100 - (enemy?.hull || 100);
   const mobility = enemy?.mobility ?? 100;
   const fire = enemy?.fire || 0;
   const limp = mobility < 45 ? 0.22 : 0.08;
 
-  useMemo(() => {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 8;
-  }, [texture]);
+  useEffect(() => {
+    const scar = Math.min(0.45, damage / 180);
+    clone.traverse((child) => {
+      if (!child.isMesh || !child.material?.color) return;
+      const base = baseColors.current.get(child.uuid);
+      if (!base) return;
+      child.material.color.copy(base);
+      child.material.color.offsetHSL(0, -scar * 0.15, -scar * 0.12);
+    });
+  }, [clone, damage]);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -310,26 +334,12 @@ function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw
     group.current.rotation.z = Math.sin(t * 0.7) * limp * 0.15;
   });
 
-  // Source image is ~168x315; keep that portrait aspect for the towering cutout.
-  const height = 4.6;
-  const width = height * (168 / 315);
-
   return (
-    <group ref={group} position={position} rotation={[0, yaw, 0]}>
-      <mesh position={[0, height / 2 - 0.15, 0]} castShadow>
-        <planeGeometry args={[width, height]} />
-        <meshBasicMaterial
-          map={texture}
-          transparent
-          alphaTest={0.08}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-          color={damage > 55 ? "#c8b4a8" : "#ffffff"}
-        />
-      </mesh>
+    <group ref={group} position={position} rotation={[0, yaw, 0]} scale={scale}>
+      <primitive object={clone} castShadow receiveShadow />
 
       {fire > 5 && (
-        <group position={[0.15, height * 0.55, 0.12]}>
+        <group position={[0.15, 2.6, 0.35]}>
           <pointLight color="#ff6a24" intensity={Math.min(5, fire / 16)} distance={6} />
           <mesh>
             <sphereGeometry args={[0.28 + fire / 350, 12, 8]} />
@@ -338,14 +348,14 @@ function MechModel({ enemy, position = ENEMY_MECH.position, yaw = ENEMY_MECH.yaw
         </group>
       )}
       {damage > 40 && (
-        <mesh position={[width * 0.28, height * 0.62, 0.08]}>
-          <sphereGeometry args={[0.14, 8, 8]} />
+        <mesh position={[0.55, 2.85, 0.4]}>
+          <sphereGeometry args={[0.16, 8, 8]} />
           <meshBasicMaterial color="#120e0c" />
         </mesh>
       )}
       {mobility < 50 && (
-        <mesh position={[-width * 0.2, height * 0.22, 0.1]} rotation={[0, 0, 0.4]}>
-          <boxGeometry args={[0.12, 0.45, 0.12]} />
+        <mesh position={[-0.7, 0.9, 0.2]} rotation={[0, 0, 0.4]}>
+          <boxGeometry args={[0.14, 0.5, 0.14]} />
           <meshStandardMaterial color="#6a2a1a" emissive="#ff3a00" emissiveIntensity={0.6} />
         </mesh>
       )}
@@ -542,5 +552,6 @@ export function OceanScene({
 }
 
 useGLTF.preload("/assets/models/ships/wayward-gull-detailed.glb");
+useGLTF.preload("/assets/models/mechs/iron-leviathan.glb");
 useTexture.preload("/assets/textures/crew/lego-captain.png");
-useTexture.preload("/assets/textures/mech/big-robot.png");
+useTexture.preload("/assets/textures/storm-sea.png");

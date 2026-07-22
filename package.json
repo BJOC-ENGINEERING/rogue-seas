@@ -16,7 +16,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets:ship": "blender --background --python scripts/build_detailed_ship.py",
+    "assets:mech": "blender --background --python scripts/build_war_mech.py",
+    "assets": "npm run assets:ship && npm run assets:mech"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",
