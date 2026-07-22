@@ -1256,9 +1256,15 @@ select:focus-visible {
   border-radius: 50%;
 }
 
-.deck-cell.emergency {
+.deck-cell.emergency:not(.inactive-emergency) {
   background: #9d3a2a;
   border-color: #e6744e;
+  animation: emergency-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes emergency-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
 }
 
 .deck-cell.emergency > svg {
