@@ -323,7 +323,6 @@ export function CombatScreen() {
       </div>
       <VesselPlate enemy />
 
-      <CrewPanel />
       <PauseBanner />
 
       <div className="view-buttons">
