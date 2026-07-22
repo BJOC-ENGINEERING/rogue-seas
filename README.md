@@ -19,15 +19,16 @@ The game runs best in a modern desktop browser with WebGL enabled.
 
 ## What is playable
 
-- A title, voyage chart, encounter, and full combat loop
-- Six named crew members with roles, health, movement, and station bonuses
-- Pausable real-time combat at 1x, 2x, and 3x speed
+- A title, voyage chart, encounter, combat loop, and campaign victory at the Red Bastion
+- Six named crew members with roles, health, movement, and specialty station bonuses
+- Pausable real-time combat at 1x, 2x, and 3x speed, with critical-event pause reasons
 - Port and starboard broadsides with staggered visual cannonballs, muzzle flash, and impact bursts
 - War-mech opponents with armor, motive joints, weapon pods, and crew targeting
 - Round, chain, grape, and incendiary shot with delayed damage on impact
-- Fires, flooding, hull damage, torn sails, wounds, and critical-event auto-pause
-- Repair, pump, firefighting, surgery, retreat, victory, and defeat actions
-- Branching voyage nodes, port repair, supplies, and persistent local progress
+- Fires, flooding, hull damage, torn sails, wounds, magazine risk, and sail repair under fire
+- Repair, pump, firefighting, surgery, tactical retreat, salvage rewards, victory, and defeat
+- Branching voyage nodes (combat, storm, port, elite), live hull/supply briefings, and local progress
+- Damage and crew carry between fights until port or defeat
 - A detailed three-mast ship generated through Blender's Python API
 - A movable 3D camera with orbit and zoom controls
 
