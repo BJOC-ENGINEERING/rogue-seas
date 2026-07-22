@@ -7,9 +7,7 @@ import {
   CompassRose,
   Crosshair,
   Drop,
-  Eye,
   Flame,
-  GridFour,
   Pause,
   Play,
   Stack,
@@ -102,7 +100,7 @@ function GunneryControls() {
   return (
     <section className="gunnery-panel ink-panel">
       <header>
-        <div><small>Gun deck</small><strong>Broadside Orders</strong></div>
+        <div><small>Battery</small><strong>Broadside</strong></div>
         <span className={player.reload > 0 ? "reloading" : "ready"}>{player.reload > 0 ? `${player.reload.toFixed(1)}s` : "Ready"}</span>
       </header>
       <div className="ammo-tabs">
@@ -314,32 +312,48 @@ export function CombatScreen() {
       <div className="scene-layer"><OceanScene player={player} enemy={enemy} crew={crew} volleys={volleys} fogDense={fogDense} /></div>
       <div className={`fog-overlay ${fogDense ? "dense" : "clear"}`} />
 
-      <VesselPlate />
-      <div className="encounter-banner">
-        <small>Encounter</small>
-        <strong>
-          <Sword weight="fill" />
-          {encounterThreat === "elite" ? "Siege mech" : encounterThreat === "storm" ? "Gale contact" : "Mech in range"}
-        </strong>
-      </div>
-      <VesselPlate enemy />
+      <header className="combat-top-rail">
+        <VesselPlate />
+        <div className="top-rail-center">
+          <div className="encounter-banner">
+            <small>Encounter</small>
+            <strong>
+              <Sword weight="fill" />
+              {encounterThreat === "elite" ? "Siege mech" : encounterThreat === "storm" ? "Gale contact" : "Mech in range"}
+            </strong>
+          </div>
+          <TimeControls />
+        </div>
+        <VesselPlate enemy />
+      </header>
 
       <CrewPanel />
       <PauseBanner />
-
-      <div className="view-buttons">
-        <button onClick={() => window.dispatchEvent(new Event("rogue-seas-reset-camera"))}><Stack weight="duotone" /><span><small>Camera</small><strong>Reset view</strong></span></button>
-        <button><GridFour weight="duotone" /><span><small>Movement</small><strong>WASD + drag</strong></span></button>
-        <button onClick={resetVoyage}><ArrowCounterClockwise /><strong>Reset voyage</strong></button>
-      </div>
-
-      <TimeControls />
       <CombatAlerts />
-      <ShipReadouts />
+
+      <aside className="combat-utility">
+        <button type="button" onClick={() => window.dispatchEvent(new Event("rogue-seas-reset-camera"))}>
+          <Stack weight="duotone" />
+          <span><small>Camera</small><strong>Reset view</strong></span>
+        </button>
+        <button type="button" className="utility-quiet" onClick={resetVoyage}>
+          <ArrowCounterClockwise />
+          <span>Abandon voyage</span>
+        </button>
+      </aside>
+
       <CombatLog />
-      <div className="combat-control-dock"><GunneryControls /><HelmControls /></div>
-      <CompassRose className="combat-compass" weight="duotone" />
-      <div className="camera-hint"><Eye /> WASD to move <i /> Drag to look <i /> Scroll to zoom <i /> R resets <i /> Space pauses <i /> F fires</div>
+
+      <footer className="combat-bottom-rail">
+        <ShipReadouts />
+        <div className="combat-control-dock orders-desk">
+          <div className="orders-desk-label"><small>Gun deck</small><strong>Orders desk</strong></div>
+          <GunneryControls />
+          <HelmControls />
+        </div>
+        <div className="bottom-rail-spacer" aria-hidden="true" />
+      </footer>
+
       <BattleOutcome />
     </section>
   );
