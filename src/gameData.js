@@ -150,7 +150,7 @@ export const stationData = {
     x: 11,
     y: 2,
     specialty: "Gunnery",
-    description: "Speeds ammunition handling but is vulnerable to fire.",
+    description: "Speeds reloads, but fire near the magazine grows faster.",
   },
   fire: {
     id: "fire",
@@ -227,7 +227,7 @@ export const chartNodes = [
 export const targetSystems = [
   { id: "hull", label: "Armor plating", detail: "Punch through the mech's outer shell." },
   { id: "mobility", label: "Motive joints", detail: "Shatter legs and hip actuators." },
-  { id: "weapons", label: "Weapon pods", detail: "Silence the mech's gun batteries." },
+  { id: "weapons", label: "Weapon pods", detail: "Smash gun pods to slow and weaken enemy volleys." },
   { id: "crew", label: "Pilot & crew", detail: "Rake observation slits and break morale." },
 ];
 
@@ -307,20 +307,46 @@ export function makePlayerShip() {
   };
 }
 
-export function makeEnemyMech() {
+export function makeEnemyMech({ elite = false } = {}) {
   return {
-    name: "Unknown War-Mech",
+    name: elite ? "Red Bastion Siege-Mech" : "Unknown War-Mech",
     kind: "mech",
-    hull: 100,
-    maxHull: 100,
-    mobility: 100,
-    crew: 100,
+    hull: elite ? 135 : 100,
+    maxHull: elite ? 135 : 100,
+    mobility: elite ? 115 : 100,
+    crew: elite ? 120 : 100,
+    weapons: 100,
     fire: 0,
-    morale: 100,
-    reload: 5.5,
-    identified: false,
+    morale: elite ? 125 : 100,
+    reload: elite ? 4.1 : 5.5,
+    identified: elite,
+    elite,
   };
 }
+
+export const encounterCopy = {
+  combat: {
+    eyebrow: "Sail to the sound of guns",
+    title: "You encounter a war-mech",
+    body: "Iron limbs rise from the fog and the machine turns its gun pods toward your broadside.",
+    fight: "Fight",
+    detail: "Beat to quarters",
+  },
+  storm: {
+    eyebrow: "Gale Bank claims another keel",
+    title: "A storm-wrapped war-mech",
+    body: "Sheets of rain hide the machine until its first ranging shots tear through the canvas. Visibility is poor and the bilges are already wet.",
+    fight: "Engage in the gale",
+    detail: "Reef sail and fight",
+  },
+  elite: {
+    eyebrow: "The Red Bastion waits",
+    title: "Siege-mech on the shoals",
+    body: "A heavier machine, guns already warm, blocks the only channel out. This is the fight the voyage was built for.",
+    fight: "Challenge the bastion",
+    detail: "No fog left to hide in",
+  },
+};
 
 /** @deprecated Use makeEnemyMech */
 export const makeEnemyShip = makeEnemyMech;

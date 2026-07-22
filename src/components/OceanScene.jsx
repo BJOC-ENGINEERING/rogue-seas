@@ -70,22 +70,30 @@ function DeckCrew({ crew = [], volleys = [] }) {
     && volley.shots.some((shot) => volley.age >= shot.fireDelay && volley.age - shot.fireDelay < 0.24)
   ));
   const firingSide = activeVolley?.battery;
+  const portGunners = crew.filter((member) => member.health > 0 && !member.target && member.location === "portGuns").slice(0, 3);
+  const starboardGunners = crew.filter((member) => member.health > 0 && !member.target && member.location === "starboardGuns").slice(0, 3);
   const stations = [
-    ...GUNNER_INDICES.map((index, crewIndex) => ({
-      member: crew[crewIndex],
-      position: [PORT_GUNS[index][0], PORT_GUNS[index][1] + 0.1, PORT_GUNS[index][2] * 0.55],
-      side: "port",
-    })),
-    ...GUNNER_INDICES.map((index, crewIndex) => ({
-      member: crew[crewIndex + 3],
-      position: [STARBOARD_GUNS[index][0], STARBOARD_GUNS[index][1] + 0.1, STARBOARD_GUNS[index][2] * 0.55],
-      side: "starboard",
-    })),
+    ...portGunners.map((member, crewIndex) => {
+      const index = GUNNER_INDICES[crewIndex] ?? GUNNER_INDICES[0];
+      return {
+        member,
+        position: [PORT_GUNS[index][0], PORT_GUNS[index][1] + 0.1, PORT_GUNS[index][2] * 0.55],
+        side: "port",
+      };
+    }),
+    ...starboardGunners.map((member, crewIndex) => {
+      const index = GUNNER_INDICES[crewIndex] ?? GUNNER_INDICES[0];
+      return {
+        member,
+        position: [STARBOARD_GUNS[index][0], STARBOARD_GUNS[index][1] + 0.1, STARBOARD_GUNS[index][2] * 0.55],
+        side: "starboard",
+      };
+    }),
   ];
 
   return (
     <group>
-      {stations.map(({ member, position, side }, index) => member && (
+      {stations.map(({ member, position, side }) => (
         <CrewModel
           key={member.id}
           member={member}

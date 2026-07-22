@@ -81,19 +81,22 @@ function DeckGrid({ deck, cells, columns = 16 }) {
 }
 
 function CrewCard({ person, selected, onSelect }) {
-  const healthTone = person.health < 35 ? "critical" : person.health < 70 ? "wounded" : "healthy";
+  const healthTone = person.health <= 0 ? "critical" : person.health < 35 ? "critical" : person.health < 70 ? "wounded" : "healthy";
+  const station = stationData[person.location];
+  const specialtyMatch = station && person.specialty === station.specialty && !person.target;
   return (
     <button
-      className={`crew-card ${selected ? "selected" : ""} ${healthTone}`}
+      className={`crew-card ${selected ? "selected" : ""} ${healthTone} ${specialtyMatch ? "specialty-match" : ""}`}
       onClick={onSelect}
       style={{ "--crew-color": person.color }}
+      disabled={person.health <= 0}
     >
       <span className="crew-avatar"><UsersThree weight="fill" /></span>
       <span className="crew-card-copy">
         <strong>{person.name}</strong>
-        <small>{person.status}</small>
+        <small>{person.health <= 0 ? "Out of action" : person.status}</small>
       </span>
-      <span className="crew-health"><i style={{ width: `${person.health}%` }} /></span>
+      <span className="crew-health"><i style={{ width: `${Math.max(0, person.health)}%` }} /></span>
     </button>
   );
 }
@@ -135,8 +138,8 @@ export function CrewPanel() {
       </section>
 
       <footer className="deck-legend">
-        <span><i className="legend-station" /> Circular icon = manned station</span>
-        <span><i className="legend-crew" /> Initial = crew position</span>
+        <span><i className="legend-station" /> Station · gold rim = specialty match</span>
+        <span><i className="legend-crew" /> Initial = crew on station</span>
       </footer>
     </aside>
   );

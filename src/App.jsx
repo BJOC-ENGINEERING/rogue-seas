@@ -1,6 +1,7 @@
 import { ChartScreen } from "./components/ChartScreen";
 import { CombatScreen } from "./components/CombatScreen";
 import { TitleScreen } from "./components/TitleScreen";
+import { VictoryScreen } from "./components/VictoryScreen";
 import { useGameStore } from "./store";
 
 export function App() {
@@ -11,6 +12,7 @@ export function App() {
       {screen === "title" && <TitleScreen />}
       {screen === "chart" && <ChartScreen />}
       {screen === "combat" && <CombatScreen />}
+      {screen === "victory" && <VictoryScreen />}
     </main>
   );
 }
