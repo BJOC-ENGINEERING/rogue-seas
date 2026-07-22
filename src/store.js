@@ -352,6 +352,7 @@ function softResetCombat(player, crew, { elite = false, storm = false } = {}) {
     crew: preserveCrewForNextFight(crew),
     player: nextPlayer,
     enemy: makeEnemyMech({ elite }),
+    encounterThreat: storm ? "storm" : elite ? "elite" : "combat",
     selectedCrewId: crew.find((person) => person.health > 0)?.id || "mara",
     ammo: "round",
     targetSystem: "hull",
@@ -383,6 +384,7 @@ export const useGameStore = create(persist((set, get) => ({
   voyageComplete: false,
   battleSummary: null,
   pauseReason: null,
+  encounterThreat: "combat",
   ...resetCombatState(),
 
   beginVoyage: () =>

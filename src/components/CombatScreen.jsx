@@ -278,7 +278,9 @@ export function CombatScreen() {
   const volleys = useGameStore((state) => state.volleys);
   const tick = useGameStore((state) => state.tick);
   const resetVoyage = useGameStore((state) => state.resetVoyage);
+  const encounterThreat = useGameStore((state) => state.encounterThreat);
   const lookoutManned = crew.some((person) => !person.target && person.location === "lookout" && person.health > 0);
+  const fogDense = !lookoutManned || encounterThreat === "storm";
 
   useEffect(() => {
     let frame;
@@ -309,11 +311,17 @@ export function CombatScreen() {
 
   return (
     <section className="combat-screen screen">
-      <div className="scene-layer"><OceanScene player={player} enemy={enemy} crew={crew} volleys={volleys} fogDense={!lookoutManned} /></div>
-      <div className={`fog-overlay ${lookoutManned ? "clear" : "dense"}`} />
+      <div className="scene-layer"><OceanScene player={player} enemy={enemy} crew={crew} volleys={volleys} fogDense={fogDense} /></div>
+      <div className={`fog-overlay ${fogDense ? "dense" : "clear"}`} />
 
       <VesselPlate />
-      <div className="encounter-banner"><small>Encounter</small><strong><Sword weight="fill" /> {enemy.elite ? "Siege mech" : "Mech in range"}</strong></div>
+      <div className="encounter-banner">
+        <small>Encounter</small>
+        <strong>
+          <Sword weight="fill" />
+          {encounterThreat === "elite" ? "Siege mech" : encounterThreat === "storm" ? "Gale contact" : "Mech in range"}
+        </strong>
+      </div>
       <VesselPlate enemy />
 
       <CrewPanel />
