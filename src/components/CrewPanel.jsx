@@ -138,8 +138,8 @@ export function CrewPanel() {
       </section>
 
       <footer className="deck-legend">
-        <span><i className="legend-station" /> Circular icon = manned station</span>
-        <span><i className="legend-crew" /> Initial = crew position</span>
+        <span><i className="legend-station" /> Station · gold rim = specialty match</span>
+        <span><i className="legend-crew" /> Initial = crew on station</span>
       </footer>
     </aside>
   );

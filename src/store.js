@@ -272,6 +272,19 @@ function advanceVolleys(state, delta) {
   return { ...next, volleys: remaining };
 }
 
+export function estimateRetreatChance(player, crew) {
+  const sailsPower = stationPower(crew, "sails");
+  const helmManned = stationPower(crew, "helm") > 0;
+  const sailFactor = player.sails / 100;
+  const speedFactor = player.throttle / 4;
+  const rangeFactor = clamp((player.distance - 40) / 55, 0, 1);
+  return clamp(
+    0.1 + sailsPower * 0.14 + sailFactor * 0.22 + speedFactor * 0.16 + rangeFactor * 0.12 + (helmManned ? 0.06 : -0.08),
+    0.05,
+    0.85,
+  );
+}
+
 function buildBattleSummary(state, outcome) {
   const suppliesGained = outcome === "victory" ? 6 + Math.floor(Math.random() * 5) : outcome === "escaped" ? 0 : 0;
   const hullRepaired = outcome === "victory" ? 8 + Math.floor(Math.random() * 6) : 0;
@@ -608,16 +621,7 @@ export const useGameStore = create(persist((set, get) => ({
   attemptRetreat: () => {
     const state = get();
     if (state.battleState !== "engaged" || state.paused) return;
-    const sailsManned = stationPower(state.crew, "sails");
-    const helmManned = stationPower(state.crew, "helm") > 0;
-    const sailFactor = state.player.sails / 100;
-    const speedFactor = state.player.throttle / 4;
-    const rangeFactor = clamp((state.player.distance - 40) / 55, 0, 1);
-    const chance = clamp(
-      0.1 + sailsManned * 0.14 + sailFactor * 0.22 + speedFactor * 0.16 + rangeFactor * 0.12 + (helmManned ? 0.06 : -0.08),
-      0.05,
-      0.85,
-    );
+    const chance = estimateRetreatChance(state.player, state.crew);
 
     if (Math.random() < chance) {
       const summary = buildBattleSummary(state, "escaped");

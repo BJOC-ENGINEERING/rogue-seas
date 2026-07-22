@@ -20,7 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { ammoData, targetSystems } from "../gameData";
 import { MAX_FRAME_INTERVAL } from "../frameRate";
-import { useGameStore } from "../store";
+import { estimateRetreatChance, useGameStore } from "../store";
 import { CrewPanel } from "./CrewPanel";
 import { OceanScene } from "./OceanScene";
 
@@ -88,6 +88,7 @@ function HelmControls() {
 
 function GunneryControls() {
   const player = useGameStore((state) => state.player);
+  const crew = useGameStore((state) => state.crew);
   const paused = useGameStore((state) => state.paused);
   const ammo = useGameStore((state) => state.ammo);
   const targetSystem = useGameStore((state) => state.targetSystem);
@@ -96,6 +97,7 @@ function GunneryControls() {
   const fireBroadside = useGameStore((state) => state.fireBroadside);
   const attemptRetreat = useGameStore((state) => state.attemptRetreat);
   const ready = player.reload <= 0 && !paused;
+  const odds = Math.round(estimateRetreatChance(player, crew) * 100);
 
   return (
     <section className="gunnery-panel ink-panel">
@@ -121,7 +123,9 @@ function GunneryControls() {
       <button className={`fire-button ${ready ? "pulse-ready" : ""}`} onClick={fireBroadside} disabled={!ready}>
         <Crosshair weight="bold" /> {paused ? "Paused" : player.reload > 0 ? "Reloading" : "Fire broadside"}
       </button>
-      <button className="retreat-button" onClick={attemptRetreat} disabled={paused}><Wind /> Break away into fog</button>
+      <button className="retreat-button" onClick={attemptRetreat} disabled={paused} title="Failed breakaways draw an immediate mech volley">
+        <Wind /> Break away · {odds}%
+      </button>
     </section>
   );
 }
@@ -165,16 +169,31 @@ function PauseBanner() {
   );
 }
 
+function pickSpecialist(crew, specialty, fallbackStation) {
+  const living = crew.filter((person) => person.health > 0);
+  return living.find((person) => person.specialty === specialty && person.location !== fallbackStation)
+    || living.find((person) => person.location !== fallbackStation)
+    || living[0];
+}
+
 function CombatAlerts() {
   const player = useGameStore((state) => state.player);
   const crew = useGameStore((state) => state.crew);
-  const assignSelectedCrew = useGameStore((state) => state.assignSelectedCrew);
+  const selectCrew = useGameStore((state) => state.selectCrew);
   const lookout = crew.some((person) => !person.target && person.location === "lookout" && person.health > 0);
+
+  const orderTo = (stationId, specialty) => {
+    const pick = pickSpecialist(crew, specialty, stationId);
+    if (!pick) return;
+    selectCrew(pick.id);
+    useGameStore.getState().assignSelectedCrew(stationId);
+  };
+
   return (
     <div className="combat-alerts">
-      {!lookout && <button onClick={() => assignSelectedCrew("lookout")}><Binoculars /> Lookout unmanned · visibility limited</button>}
-      {player.fire > 1 && <button className="danger" onClick={() => assignSelectedCrew("fire")}><Flame weight="fill" /> Fire on top deck · assign crew</button>}
-      {player.flood > 1 && <button className="water" onClick={() => assignSelectedCrew("leak")}><Drop weight="fill" /> Flooding below · patch leak</button>}
+      {!lookout && <button onClick={() => orderTo("lookout", "Sight")}><Binoculars /> Lookout unmanned · visibility limited</button>}
+      {player.fire > 1 && <button className="danger" onClick={() => orderTo("fire", "Repair")}><Flame weight="fill" /> Fire on top deck · assign crew</button>}
+      {player.flood > 1 && <button className="water" onClick={() => orderTo("leak", "Repair")}><Drop weight="fill" /> Flooding below · patch leak</button>}
     </div>
   );
 }
@@ -184,12 +203,20 @@ function ShipReadouts() {
   const enemy = useGameStore((state) => state.enemy);
   return (
     <div className="ship-readouts">
-      <section><span>Hull</span><strong>{Math.round(player.hull)}</strong><Meter value={player.hull} tone={player.hull < 35 ? "red" : "gold"} label="Player hull" /></section>
+      <section><span>Hull</span><strong>{Math.round(player.hull)}</strong><Meter value={(player.hull / (player.maxHull || 100)) * 100} tone={player.hull < 35 ? "red" : "gold"} label="Player hull" /></section>
       <section><span>Sails</span><strong>{Math.round(player.sails)}</strong><Meter value={player.sails} tone={player.sails < 40 ? "red" : "gold"} label="Sails" /></section>
       <section><span>Flood</span><strong>{Math.round(player.flood)}</strong><Meter value={player.flood} tone="blue" label="Flooding" /></section>
       <section><span>Fire</span><strong>{Math.round(player.fire)}</strong><Meter value={player.fire} tone="red" label="Fire" /></section>
-      <section><span>Armor</span><strong>{Math.round(enemy.hull)}</strong><Meter value={(enemy.hull / (enemy.maxHull || 100)) * 100} tone="red" label="Mech armor" /></section>
-      <section><span>Guns</span><strong>{Math.round(enemy.weapons ?? 100)}</strong><Meter value={enemy.weapons ?? 100} tone="gold" label="Mech weapons" /></section>
+      <section>
+        <span>Armor</span>
+        <strong>{enemy.identified ? Math.round(enemy.hull) : "??"}</strong>
+        <Meter value={enemy.identified ? (enemy.hull / (enemy.maxHull || 100)) * 100 : 100} tone="red" label="Mech armor" />
+      </section>
+      <section>
+        <span>Guns</span>
+        <strong>{enemy.identified ? Math.round(enemy.weapons ?? 100) : "??"}</strong>
+        <Meter value={enemy.identified ? (enemy.weapons ?? 100) : 100} tone="gold" label="Mech weapons" />
+      </section>
     </div>
   );
 }
