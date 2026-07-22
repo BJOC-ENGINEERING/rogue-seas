@@ -1453,11 +1453,11 @@ select:focus-visible {
 .combat-log {
   position: absolute;
   z-index: 7;
-  top: 200px;
-  left: auto;
-  right: 16px;
+  top: 100px;
+  left: 16px;
+  right: auto;
   bottom: auto;
-  width: 280px;
+  width: 300px;
   display: grid;
   gap: 3px;
   margin: 0;
@@ -1823,7 +1823,7 @@ select:focus-visible {
     width: 350px;
   }
 
-  .combat-log { right: 12px; width: 250px; }
+  .combat-log { left: 12px; width: 260px; }
   .combat-utility { right: 12px; width: 150px; }
 
   .orders-desk {
@@ -1863,8 +1863,13 @@ select:focus-visible {
     transform-origin: left top;
   }
   .ship-readouts,
-  .combat-log,
   .bottom-rail-spacer { display: none; }
+  .combat-log {
+    top: auto;
+    bottom: 170px;
+    left: 12px;
+    width: min(280px, 70vw);
+  }
   .combat-bottom-rail {
     grid-template-columns: 1fr;
     justify-items: center;

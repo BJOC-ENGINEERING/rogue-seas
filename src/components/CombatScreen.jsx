@@ -19,7 +19,6 @@ import {
 import { ammoData, targetSystems } from "../gameData";
 import { MAX_FRAME_INTERVAL } from "../frameRate";
 import { estimateRetreatChance, useGameStore } from "../store";
-import { CrewPanel } from "./CrewPanel";
 import { OceanScene } from "./OceanScene";
 
 function Meter({ value, tone = "gold", label }) {
@@ -327,7 +326,6 @@ export function CombatScreen() {
         <VesselPlate enemy />
       </header>
 
-      <CrewPanel />
       <PauseBanner />
       <CombatAlerts />
 
